@@ -19,7 +19,7 @@ public class Employee {
     private String position;
     private double salary;
     private int age;
-    private String department;
+    private Department department; 
 
     /**
      * Створює працівника з перевіркою всіх параметрів.
@@ -33,7 +33,7 @@ public class Employee {
      * @throws IllegalArgumentException якщо будь-який параметр некоректний
      */
     public Employee(String firstName, String lastName, String position,
-                    double salary, int age, String department) {
+                    double salary, int age, Department department) {
         setFirstName(firstName);
         setLastName(lastName);
         setPosition(position);
@@ -140,7 +140,7 @@ public class Employee {
     }
 
     /** @return відділ */
-    public String getDepartment() {
+    public Department getDepartment() {
         return department;
     }
 
@@ -150,10 +150,12 @@ public class Employee {
      * @param department новий відділ
      * @throws IllegalArgumentException якщо відділ null або порожній
      */
-    public void setDepartment(String department) {
-        this.department = requireNotBlank(department, "Відділ");
+    public void setDepartment(Department department) {
+        if (department == null) {
+			throw new IllegalArgumentException("Відділ не може бути порожнім.");
     }
-
+	 this.department = department;
+	 }
     /** @return текстове подання працівника з усіма полями */
     @Override
     public String toString() {
@@ -162,7 +164,7 @@ public class Employee {
                 "', position='" + position +
                 "', salary=" + salary +
                 ", age=" + age +
-                ", department='" + department + "'}";
+                ", department=" + department + "}";
     }
 
     /**
@@ -178,7 +180,7 @@ public class Employee {
         Employee employee = (Employee) o;
         return Double.compare(employee.salary, salary) == 0
                 && age == employee.age
-                && Objects.equals(firstName, employee.firstName)
+                && department == employee.department
                 && Objects.equals(lastName, employee.lastName)
                 && Objects.equals(position, employee.position)
                 && Objects.equals(department, employee.department);

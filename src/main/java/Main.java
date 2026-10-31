@@ -53,7 +53,7 @@ public class Main {
         String position = readNonEmpty("Посада: ");
         double salary = readDouble("Зарплата: ");
         int age = readInt("Вік: ");
-        String department = readNonEmpty("Відділ: ");
+        Department department = readDepartment(); // ★ ЗМІНЕНО (було readNonEmpty("Відділ: "))
 
         try {
             Employee employee = new Employee(firstName, lastName, position, salary, age, department);
@@ -125,6 +125,26 @@ public class Main {
         }
     }
 
+    // ★ НОВЕ ▼
+    /**
+     * Зчитує ціле число з заданого діапазону, повторюючи запит при помилці.
+     *
+     * @param prompt підказка
+     * @param min    мінімальне допустиме значення
+     * @param max    максимальне допустиме значення
+     * @return число з діапазону [min; max]
+     */
+    private static int readIntInRange(String prompt, int min, int max) {
+        while (true) {
+            int value = readInt(prompt);
+            if (value >= min && value <= max) {
+                return value;
+            }
+            System.out.println("Число має бути від " + min + " до " + max + ".");
+        }
+    }
+    // ★ НОВЕ ▲
+
     /**
      * Зчитує дійсне число (допускається кома), повторюючи запит при помилці.
      *
@@ -141,4 +161,21 @@ public class Main {
             }
         }
     }
+
+    // ★ НОВЕ ▼
+    /**
+     * Показує список відділів і зчитує вибір користувача.
+     *
+     * @return обраний відділ
+     */
+    private static Department readDepartment() {
+        Department[] values = Department.values();
+        System.out.println("Оберіть відділ:");
+        for (int i = 0; i < values.length; i++) {
+            System.out.println((i + 1) + ". " + values[i]);
+        }
+        int choice = readIntInRange("Номер відділу: ", 1, values.length);
+        return values[choice - 1];
+    }
+    // ★ НОВЕ ▲
 }
