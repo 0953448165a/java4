@@ -15,8 +15,10 @@ public class Main {
             String lastName = readNonEmptyString(scanner, "Прізвище: ");
             String position = readNonEmptyString(scanner, "Посада: ");
             double salary = readPositiveDouble(scanner, "Зарплата: ");
+            int age = readPositiveInt(scanner, "Вік: ");
+            String department = readNonEmptyString(scanner, "Відділ: ");
 
-            employees.add(new Employee(firstName, lastName, position, salary));
+            employees.add(new Employee(firstName, lastName, position, salary, age, department));
         }
 
         System.out.println("\n=== Список працівників ===");
@@ -24,7 +26,6 @@ public class Main {
             System.out.println(e);
         }
 
-        // Демонстрація equals()
         if (employees.size() >= 2) {
             System.out.println("\nПерший == другий? "
                     + employees.get(0).equals(employees.get(1)));

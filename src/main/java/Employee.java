@@ -1,11 +1,24 @@
 import java.util.Objects;
+
 public class Employee {
     private String firstName;
     private String lastName;
     private String position;
     private double salary;
+    private int age;
+    private String department;
 
-	     public String getFirstName() {
+    public Employee(String firstName, String lastName, String position,
+                    double salary, int age, String department) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.position = position;
+        this.salary = salary;
+        this.age = age;
+        this.department = department;
+    }
+
+    public String getFirstName() {
         return firstName;
     }
 
@@ -37,18 +50,30 @@ public class Employee {
         this.salary = salary;
     }
 
-    public Employee(String firstName, String lastName, String position, double salary) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.position = position;
-        this.salary = salary;
+    public int getAge() {
+        return age;
     }
-	@Override
+
+    public void setAge(int age) {
+        this.age = age;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    @Override
     public String toString() {
         return "Employee{firstName='" + firstName +
                 "', lastName='" + lastName +
                 "', position='" + position +
-                "', salary=" + salary + "}";
+                "', salary=" + salary +
+                ", age=" + age +
+                ", department='" + department + "'}";
     }
 
     @Override
@@ -57,13 +82,15 @@ public class Employee {
         if (o == null || getClass() != o.getClass()) return false;
         Employee employee = (Employee) o;
         return Double.compare(employee.salary, salary) == 0
+                && age == employee.age
                 && Objects.equals(firstName, employee.firstName)
                 && Objects.equals(lastName, employee.lastName)
-                && Objects.equals(position, employee.position);
+                && Objects.equals(position, employee.position)
+                && Objects.equals(department, employee.department);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(firstName, lastName, position, salary);
+        return Objects.hash(firstName, lastName, position, salary, age, department);
     }
 }
