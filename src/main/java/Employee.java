@@ -1,6 +1,19 @@
 import java.util.Objects;
 
+/**
+ * Працівник організації.
+ * <p>
+ * Усі поля перевіряються на коректність у конструкторі та сетерах.
+ * Якщо значення некоректне, кидається {@link IllegalArgumentException}.
+ */
 public class Employee {
+
+    /** Мінімально допустимий вік працівника. */
+    public static final int MIN_AGE = 18;
+
+    /** Максимально допустимий вік працівника. */
+    public static final int MAX_AGE = 70;
+
     private String firstName;
     private String lastName;
     private String position;
@@ -8,64 +21,140 @@ public class Employee {
     private int age;
     private String department;
 
+    /**
+     * Створює працівника з перевіркою всіх параметрів.
+     *
+     * @param firstName  ім'я (не порожнє)
+     * @param lastName   прізвище (не порожнє)
+     * @param position   посада (не порожня)
+     * @param salary     зарплата (більше 0)
+     * @param age        вік (від {@value #MIN_AGE} до {@value #MAX_AGE})
+     * @param department відділ (не порожній)
+     * @throws IllegalArgumentException якщо будь-який параметр некоректний
+     */
     public Employee(String firstName, String lastName, String position,
                     double salary, int age, String department) {
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.position = position;
-        this.salary = salary;
-        this.age = age;
-        this.department = department;
+        setFirstName(firstName);
+        setLastName(lastName);
+        setPosition(position);
+        setSalary(salary);
+        setAge(age);
+        setDepartment(department);
     }
 
+    /**
+     * Перевіряє, що рядок не є null і не порожній.
+     *
+     * @param value     значення
+     * @param fieldName назва поля для повідомлення про помилку
+     * @return значення без пробілів по краях
+     * @throws IllegalArgumentException якщо рядок null або порожній
+     */
+    private static String requireNotBlank(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(fieldName + " не може бути порожнім.");
+        }
+        return value.trim();
+    }
+
+    /** @return ім'я */
     public String getFirstName() {
         return firstName;
     }
 
+    /**
+     * Встановлює ім'я.
+     *
+     * @param firstName нове ім'я
+     * @throws IllegalArgumentException якщо ім'я null або порожнє
+     */
     public void setFirstName(String firstName) {
-        this.firstName = firstName;
+        this.firstName = requireNotBlank(firstName, "Ім'я");
     }
 
+    /** @return прізвище */
     public String getLastName() {
         return lastName;
     }
 
+    /**
+     * Встановлює прізвище.
+     *
+     * @param lastName нове прізвище
+     * @throws IllegalArgumentException якщо прізвище null або порожнє
+     */
     public void setLastName(String lastName) {
-        this.lastName = lastName;
+        this.lastName = requireNotBlank(lastName, "Прізвище");
     }
 
+    /** @return посада */
     public String getPosition() {
         return position;
     }
 
+    /**
+     * Встановлює посаду.
+     *
+     * @param position нова посада
+     * @throws IllegalArgumentException якщо посада null або порожня
+     */
     public void setPosition(String position) {
-        this.position = position;
+        this.position = requireNotBlank(position, "Посада");
     }
 
+    /** @return зарплата */
     public double getSalary() {
         return salary;
     }
 
+    /**
+     * Встановлює зарплату.
+     *
+     * @param salary нова зарплата
+     * @throws IllegalArgumentException якщо зарплата не більша за 0 або не є скінченним числом
+     */
     public void setSalary(double salary) {
+        if (Double.isNaN(salary) || Double.isInfinite(salary) || salary <= 0) {
+            throw new IllegalArgumentException("Зарплата має бути більшою за 0.");
+        }
         this.salary = salary;
     }
 
+    /** @return вік */
     public int getAge() {
         return age;
     }
 
+    /**
+     * Встановлює вік.
+     *
+     * @param age новий вік
+     * @throws IllegalArgumentException якщо вік поза межами від {@value #MIN_AGE} до {@value #MAX_AGE}
+     */
     public void setAge(int age) {
+        if (age < MIN_AGE || age > MAX_AGE) {
+            throw new IllegalArgumentException(
+                    "Вік має бути від " + MIN_AGE + " до " + MAX_AGE + ".");
+        }
         this.age = age;
     }
 
+    /** @return відділ */
     public String getDepartment() {
         return department;
     }
 
+    /**
+     * Встановлює відділ.
+     *
+     * @param department новий відділ
+     * @throws IllegalArgumentException якщо відділ null або порожній
+     */
     public void setDepartment(String department) {
-        this.department = department;
+        this.department = requireNotBlank(department, "Відділ");
     }
 
+    /** @return текстове подання працівника з усіма полями */
     @Override
     public String toString() {
         return "Employee{firstName='" + firstName +
@@ -76,6 +165,12 @@ public class Employee {
                 ", department='" + department + "'}";
     }
 
+    /**
+     * Порівнює працівників за всіма полями.
+     *
+     * @param o інший об'єкт
+     * @return true, якщо всі поля збігаються
+     */
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -89,6 +184,7 @@ public class Employee {
                 && Objects.equals(department, employee.department);
     }
 
+    /** @return хеш-код, узгоджений з {@link #equals(Object)} */
     @Override
     public int hashCode() {
         return Objects.hash(firstName, lastName, position, salary, age, department);
