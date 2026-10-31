@@ -1,43 +1,106 @@
 import java.util.ArrayList;
 import java.util.Scanner;
 
+/**
+ * Драйвер програми: консольне меню для роботи зі списком працівників.
+ * Некоректне введення не завершує програму.
+ */
 public class Main {
+
+    private static final Scanner SCANNER = new Scanner(System.in);
+    private static final ArrayList<Employee> EMPLOYEES = new ArrayList<>();
+
+    /**
+     * Точка входу. Показує меню, поки користувач не обере вихід.
+     *
+     * @param args аргументи командного рядка (не використовуються)
+     */
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-
-        int n = readPositiveInt(scanner, "Введіть кількість працівників: ");
-        ArrayList<Employee> employees = new ArrayList<>();
-
-        for (int i = 0; i < n; i++) {
-            System.out.println("\nПрацівник №" + (i + 1));
-
-            String firstName = readNonEmptyString(scanner, "Ім'я: ");
-            String lastName = readNonEmptyString(scanner, "Прізвище: ");
-            String position = readNonEmptyString(scanner, "Посада: ");
-            double salary = readPositiveDouble(scanner, "Зарплата: ");
-            int age = readPositiveInt(scanner, "Вік: ");
-            String department = readNonEmptyString(scanner, "Відділ: ");
-
-            employees.add(new Employee(firstName, lastName, position, salary, age, department));
+        boolean running = true;
+        while (running) {
+            printMenu();
+            int choice = readInt("Ваш вибір: ");
+            switch (choice) {
+                case 1 -> createEmployee();
+                case 2 -> printAll();
+                case 3 -> {
+                    running = false;
+                    System.out.println("Роботу завершено.");
+                }
+                default -> System.out.println("Невірний пункт меню. Оберіть 1, 2 або 3.");
+            }
         }
-
-        System.out.println("\n=== Список працівників ===");
-        for (Employee e : employees) {
-            System.out.println(e);
-        }
-
-        if (employees.size() >= 2) {
-            System.out.println("\nПерший == другий? "
-                    + employees.get(0).equals(employees.get(1)));
-        }
-
-        scanner.close();
+        SCANNER.close();
     }
 
-    private static String readNonEmptyString(Scanner scanner, String prompt) {
+    /** Виводить меню. */
+    private static void printMenu() {
+        System.out.println("\n=== МЕНЮ ===");
+        System.out.println("1. Створити нового працівника");
+        System.out.println("2. Вивести всіх працівників");
+        System.out.println("3. Завершити роботу");
+    }
+
+    /**
+     * Зчитує дані працівника і створює об'єкт.
+     * Якщо дані некоректні, виняток перехоплюється, об'єкт не створюється,
+     * програма повертається в меню.
+     */
+    private static void createEmployee() {
+        System.out.println("\n--- Новий працівник ---");
+        String firstName = readNonEmpty("Ім'я: ");
+        String lastName = readNonEmpty("Прізвище: ");
+        String position = readNonEmpty("Посада: ");
+        double salary = readDouble("Зарплата: ");
+        int age = readInt("Вік: ");
+        String department = readNonEmpty("Відділ: ");
+
+        try {
+            Employee employee = new Employee(firstName, lastName, position, salary, age, department);
+            EMPLOYEES.add(employee);
+            System.out.println("Працівника додано.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Помилка: " + e.getMessage());
+            System.out.println("Працівника не створено.");
+        }
+    }
+
+    /** Виводить усіх працівників через toString(). */
+    private static void printAll() {
+        if (EMPLOYEES.isEmpty()) {
+            System.out.println("Список порожній.");
+            return;
+        }
+        System.out.println("\n=== Список працівників ===");
+        for (int i = 0; i < EMPLOYEES.size(); i++) {
+            System.out.println((i + 1) + ". " + EMPLOYEES.get(i));
+        }
+    }
+
+    /**
+     * Зчитує рядок з консолі. Якщо введення закінчилось (Ctrl+Z), програма завершується.
+     *
+     * @param prompt підказка для користувача
+     * @return введений рядок без пробілів по краях
+     */
+    private static String readLine(String prompt) {
+        System.out.print(prompt);
+        if (!SCANNER.hasNextLine()) {
+            System.out.println("\nВведення завершено.");
+            System.exit(0);
+        }
+        return SCANNER.nextLine().trim();
+    }
+
+    /**
+     * Зчитує непорожній рядок, повторюючи запит при порожньому введенні.
+     *
+     * @param prompt підказка
+     * @return непорожній рядок
+     */
+    private static String readNonEmpty(String prompt) {
         while (true) {
-            System.out.print(prompt);
-            String line = scanner.nextLine().trim();
+            String line = readLine(prompt);
             if (!line.isEmpty()) {
                 return line;
             }
@@ -45,34 +108,36 @@ public class Main {
         }
     }
 
-    private static int readPositiveInt(Scanner scanner, String prompt) {
+    /**
+     * Зчитує ціле число, повторюючи запит при нечисловому введенні.
+     *
+     * @param prompt підказка
+     * @return введене ціле число
+     */
+    private static int readInt(String prompt) {
         while (true) {
-            System.out.print(prompt);
-            String line = scanner.nextLine().trim();
+            String line = readLine(prompt);
             try {
-                int value = Integer.parseInt(line);
-                if (value > 0) {
-                    return value;
-                }
-                System.out.println("Число має бути більше 0.");
+                return Integer.parseInt(line);
             } catch (NumberFormatException e) {
-                System.out.println("Некоректне ціле число, спробуйте ще раз.");
+                System.out.println("Потрібно ввести ціле число.");
             }
         }
     }
 
-    private static double readPositiveDouble(Scanner scanner, String prompt) {
+    /**
+     * Зчитує дійсне число (допускається кома), повторюючи запит при помилці.
+     *
+     * @param prompt підказка
+     * @return введене число
+     */
+    private static double readDouble(String prompt) {
         while (true) {
-            System.out.print(prompt);
-            String line = scanner.nextLine().trim().replace(',', '.');
+            String line = readLine(prompt).replace(',', '.');
             try {
-                double value = Double.parseDouble(line);
-                if (value > 0) {
-                    return value;
-                }
-                System.out.println("Значення має бути більше 0.");
+                return Double.parseDouble(line);
             } catch (NumberFormatException e) {
-                System.out.println("Некоректне число, спробуйте ще раз.");
+                System.out.println("Потрібно ввести число.");
             }
         }
     }
