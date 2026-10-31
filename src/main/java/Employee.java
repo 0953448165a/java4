@@ -5,6 +5,7 @@ import java.util.Objects;
  * <p>
  * Усі поля перевіряються на коректність у конструкторі та сетерах.
  * Якщо значення некоректне, кидається {@link IllegalArgumentException}.
+ * Клас рахує кількість створених об'єктів за допомогою статичного поля. ★
  */
 public class Employee {
 
@@ -14,22 +15,28 @@ public class Employee {
     /** Максимально допустимий вік працівника. */
     public static final int MAX_AGE = 70;
 
+    // ★ НОВЕ ▼
+    /** Кількість успішно створених об'єктів класу (включно з копіями). */
+    private static int count = 0;
+    // ★ НОВЕ ▲
+
     private String firstName;
     private String lastName;
     private String position;
     private double salary;
     private int age;
-    private Department department; 
+    private Department department;
 
     /**
      * Створює працівника з перевіркою всіх параметрів.
+     * Після успішного створення збільшує лічильник об'єктів. ★
      *
      * @param firstName  ім'я (не порожнє)
      * @param lastName   прізвище (не порожнє)
      * @param position   посада (не порожня)
      * @param salary     зарплата (більше 0)
      * @param age        вік (від {@value #MIN_AGE} до {@value #MAX_AGE})
-     * @param department відділ (не порожній)
+     * @param department відділ (не null)
      * @throws IllegalArgumentException якщо будь-який параметр некоректний
      */
     public Employee(String firstName, String lastName, String position,
@@ -40,7 +47,46 @@ public class Employee {
         setSalary(salary);
         setAge(age);
         setDepartment(department);
+        count++; // ★ НОВЕ (збільшується лише якщо всі перевірки пройдено)
     }
+
+    // ★ НОВЕ ▼
+    /**
+     * Конструктор копіювання. Створює нового працівника з тими самими
+     * значеннями полів, що й у переданого. Копія також враховується в лічильнику.
+     *
+     * @param other працівник, якого потрібно скопіювати (не null)
+     * @throws IllegalArgumentException якщо other дорівнює null
+     */
+    public Employee(Employee other) {
+        this(requireNotNull(other).firstName, other.lastName, other.position,
+                other.salary, other.age, other.department);
+    }
+
+    /**
+     * Перевіряє, що працівник для копіювання не є null.
+     *
+     * @param other працівник
+     * @return той самий працівник
+     * @throws IllegalArgumentException якщо other дорівнює null
+     */
+    private static Employee requireNotNull(Employee other) {
+        if (other == null) {
+            throw new IllegalArgumentException("Працівник для копіювання не може бути null.");
+        }
+        return other;
+    }
+
+    /**
+     * Повертає кількість створених об'єктів класу {@code Employee}.
+     * Об'єкти, під час створення яких виникла помилка валідації, не враховуються.
+     *
+     * @return кількість створених працівників
+     */
+    public static int getCount() {
+        return count;
+    }
+    // ★ НОВЕ ▲
 
     /**
      * Перевіряє, що рядок не є null і не порожній.
@@ -148,14 +194,15 @@ public class Employee {
      * Встановлює відділ.
      *
      * @param department новий відділ
-     * @throws IllegalArgumentException якщо відділ null або порожній
+     * @throws IllegalArgumentException якщо відділ null
      */
     public void setDepartment(Department department) {
         if (department == null) {
-			throw new IllegalArgumentException("Відділ не може бути порожнім.");
+            throw new IllegalArgumentException("Відділ не може бути порожнім.");
+        }
+        this.department = department;
     }
-	 this.department = department;
-	 }
+
     /** @return текстове подання працівника з усіма полями */
     @Override
     public String toString() {
@@ -181,9 +228,9 @@ public class Employee {
         return Double.compare(employee.salary, salary) == 0
                 && age == employee.age
                 && department == employee.department
+                && Objects.equals(firstName, employee.firstName)
                 && Objects.equals(lastName, employee.lastName)
-                && Objects.equals(position, employee.position)
-                && Objects.equals(department, employee.department);
+                && Objects.equals(position, employee.position);
     }
 
     /** @return хеш-код, узгоджений з {@link #equals(Object)} */
