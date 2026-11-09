@@ -2,10 +2,6 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Тести валідації, винятків, конструктора копіювання та статичного лічильника ★
- * класу {@link Employee}.
- */
 class EmployeeTest {
 
     private Employee validEmployee() {
@@ -62,7 +58,6 @@ class EmployeeTest {
         assertEquals(validEmployee(), validEmployee());
     }
 
-    // ★ НОВЕ ▼
     @Test
     void copyConstructorShouldCreateEqualButSeparateObject() {
         Employee original = validEmployee();
@@ -110,5 +105,5 @@ class EmployeeTest {
 
         assertEquals(before, Employee.getCount());
     }
-    // ★ НОВЕ ▲
+
 }

@@ -4,9 +4,6 @@ import java.util.ArrayList;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-/**
- * Тести класу {@link Company}, який агрегує {@link Employee}.
- */
 class CompanyTest {
 
     private Employee employee(String lastName, double salary, Department department) {
