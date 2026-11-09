@@ -25,13 +25,12 @@ public class Main {
                 case 1 -> createEmployee();
                 case 2 -> printAll();
                 case 3 -> copyEmployee();
-                case 4 -> showCounter(); 
-                case 5 -> showStatistics(); 
-                case 6 -> {
-                    running = false;
-                    System.out.println("Роботу завершено.");
-                }
-                default -> System.out.println("Невірний пункт меню. Оберіть число від 1 до 6."); // ★ ЗМІНЕНО
+					 case 4 -> showStatistics();
+					 case 5 -> {
+					 	running = false;
+						System.out.println("Роботу завершено.");
+					 }
+					default -> System.out.println("Невірний пункт меню. Оберіть число від 1 до 5.");
             }
         }
         SCANNER.close();
@@ -60,9 +59,8 @@ public class Main {
         System.out.println("1. Створити нового працівника");
         System.out.println("2. Вивести всіх працівників");
         System.out.println("3. Створити копію працівника (конструктор копіювання)"); 
-        System.out.println("4. Показати кількість створених об'єктів Employee (static)");
-        System.out.println("5. Статистика компанії"); 
-        System.out.println("6. Завершити роботу"); 
+        System.out.println("4. Статистика компанії"); 
+        System.out.println("5. Завершити роботу"); 
     }
 
     private static void createEmployee() {
@@ -115,10 +113,6 @@ public class Main {
         }
     }
 
-    private static void showCounter() {
-        System.out.println("Створено об'єктів Employee (Employee.getCount()): " + Employee.getCount());
-        System.out.println("Зараз у компанії працівників: " + company.getEmployeeCount());
-    }
 
     private static void showStatistics() {
         if (company.isEmpty()) {
