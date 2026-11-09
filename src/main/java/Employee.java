@@ -8,10 +8,6 @@ public class Employee {
    
     public static final int MAX_AGE = 70;
 
-    
-    private static int count = 0;
-
-
     private String firstName;
     private String lastName;
     private String position;
@@ -28,7 +24,6 @@ public class Employee {
         setSalary(salary);
         setAge(age);
         setDepartment(department);
-        count++; 
     }
 
     
@@ -43,11 +38,6 @@ public class Employee {
             throw new IllegalArgumentException("Працівник для копіювання не може бути null.");
         }
         return other;
-    }
-
-    
-    public static int getCount() {
-        return count;
     }
     
     private static String requireNotBlank(String value, String fieldName) {
@@ -127,14 +117,26 @@ public class Employee {
         this.department = department;
     }
 
-    @Override
-    public String toString() {
-        return "Employee{firstName='" + firstName +
+    public String getEmployeeType() {
+        return "Працівник";
+    }
+
+    public double calculateMonthlyPay() {
+        return salary;
+    }
+
+    protected String baseFieldsToString() {
+        return "firstName='" + firstName +
                 "', lastName='" + lastName +
                 "', position='" + position +
                 "', salary=" + salary +
                 ", age=" + age +
-                ", department=" + department + "}";
+                ", department=" + department;
+    }
+
+    @Override
+    public String toString() {
+        return "Employee{" + baseFieldsToString() + "}";
     }
 
     @Override

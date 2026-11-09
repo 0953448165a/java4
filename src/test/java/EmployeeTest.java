@@ -84,26 +84,7 @@ class EmployeeTest {
         assertThrows(IllegalArgumentException.class, () -> new Employee((Employee) null));
     }
 
-    @Test
-    void counterShouldIncreaseAfterEachCreatedObject() {
-        int before = Employee.getCount();
+    
 
-        Employee e = validEmployee();
-        assertEquals(before + 1, Employee.getCount());
-
-        new Employee(e);
-        assertEquals(before + 2, Employee.getCount());
-    }
-
-    @Test
-    void counterShouldNotChangeWhenCreationFails() {
-        int before = Employee.getCount();
-
-        assertThrows(IllegalArgumentException.class,
-                () -> new Employee("", "Мудрий", "Розробник", 35000, 25, Department.IT));
-        assertThrows(IllegalArgumentException.class, () -> new Employee((Employee) null));
-
-        assertEquals(before, Employee.getCount());
-    }
-
+    
 }

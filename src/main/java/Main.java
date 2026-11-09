@@ -1,21 +1,22 @@
-import java.util.Scanner; 
-
+import java.util.ArrayList;
+import java.util.Scanner;
 
 public class Main {
 
-   
     private static final String PROGRAM_TITLE =
-            "Практична робота №6: класи, static, агрегація, enum";
+            "Практична робота №7: наслідування, поліморфізм, колекції";
     private static final String AUTHOR = "Мудрий Ярослав, група ІН-43-5";
-   
 
     private static final Scanner SCANNER = new Scanner(System.in);
-    private static Company company; 
+    private static final ArrayList<Employee> EMPLOYEES = new ArrayList<>();
 
-   
+    /** Спільні дані, які зчитуються для працівника будь-якого типу. */
+    private record BaseData(String firstName, String lastName, String position,
+                            double salary, int age, Department department) {
+    }
+
     public static void main(String[] args) {
         printHeader();
-        company = createCompany(); 
 
         boolean running = true;
         while (running) {
@@ -23,20 +24,21 @@ public class Main {
             int choice = readInt("Ваш вибір: ");
             switch (choice) {
                 case 1 -> createEmployee();
-                case 2 -> printAll();
-                case 3 -> copyEmployee();
-                case 4 -> showCounter(); 
-                case 5 -> showStatistics(); 
+                case 2 -> createFullTimeEmployee();
+                case 3 -> createContractEmployee();
+                case 4 -> printAll();
+                case 5 -> showPolymorphism();
                 case 6 -> {
                     running = false;
                     System.out.println("Роботу завершено.");
                 }
-                default -> System.out.println("Невірний пункт меню. Оберіть число від 1 до 6."); // ★ ЗМІНЕНО
+                default -> System.out.println("Невірний пункт меню. Оберіть число від 1 до 6.");
             }
         }
         SCANNER.close();
     }
 
+    /** Виводить інформаційну шапку програми. */
     private static void printHeader() {
         System.out.println("==============================================");
         System.out.println(PROGRAM_TITLE);
@@ -44,39 +46,36 @@ public class Main {
         System.out.println("==============================================");
     }
 
-    private static Company createCompany() {
-        while (true) {
-            String name = readNonEmpty("Введіть назву компанії: ");
-            try {
-                return new Company(name);
-            } catch (IllegalArgumentException e) {
-                System.out.println("Помилка: " + e.getMessage());
-            }
-        }
-    }
-
+    /** Виводить меню. */
     private static void printMenu() {
-        System.out.println("\n=== МЕНЮ (" + company.getName() + ") ==="); 
-        System.out.println("1. Створити нового працівника");
-        System.out.println("2. Вивести всіх працівників");
-        System.out.println("3. Створити копію працівника (конструктор копіювання)"); 
-        System.out.println("4. Показати кількість створених об'єктів Employee (static)");
-        System.out.println("5. Статистика компанії"); 
-        System.out.println("6. Завершити роботу"); 
+        System.out.println("\n=== МЕНЮ ===");
+        System.out.println("1. Створити працівника (Employee)");
+        System.out.println("2. Створити штатного працівника (FullTimeEmployee)");
+        System.out.println("3. Створити працівника за контрактом (ContractEmployee)");
+        System.out.println("4. Вивести всіх працівників");
+        System.out.println("5. Демонстрація поліморфізму (виплати за місяць)");
+        System.out.println("6. Завершити роботу");
     }
 
-    private static void createEmployee() {
-        System.out.println("\n--- Новий працівник ---");
+
+    private static BaseData readBaseData() {
         String firstName = readNonEmpty("Ім'я: ");
         String lastName = readNonEmpty("Прізвище: ");
         String position = readNonEmpty("Посада: ");
         double salary = readDouble("Зарплата: ");
         int age = readInt("Вік: ");
         Department department = readDepartment();
+        return new BaseData(firstName, lastName, position, salary, age, department);
+    }
+
+    private static void createEmployee() {
+        System.out.println("\n--- Новий працівник ---");
+        BaseData d = readBaseData();
 
         try {
-            Employee employee = new Employee(firstName, lastName, position, salary, age, department);
-            company.addEmployee(employee);
+            Employee employee = new Employee(d.firstName(), d.lastName(), d.position(),
+                    d.salary(), d.age(), d.department());
+            EMPLOYEES.add(employee);
             System.out.println("Працівника додано.");
         } catch (IllegalArgumentException e) {
             System.out.println("Помилка: " + e.getMessage());
@@ -84,57 +83,78 @@ public class Main {
         }
     }
 
+    private static void createFullTimeEmployee() {
+        System.out.println("\n--- Новий штатний працівник ---");
+        BaseData d = readBaseData();
+        double bonus = readDouble("Щомісячна премія: ");
+        int vacationDays = readInt("Днів відпустки на рік (0-60): ");
+
+        try {
+            Employee employee = new FullTimeEmployee(d.firstName(), d.lastName(), d.position(),
+                    d.salary(), d.age(), d.department(), bonus, vacationDays);
+            EMPLOYEES.add(employee);
+            System.out.println("Штатного працівника додано.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Помилка: " + e.getMessage());
+            System.out.println("Працівника не створено.");
+        }
+    }
+
+    private static void createContractEmployee() {
+        System.out.println("\n--- Новий працівник за контрактом ---");
+        BaseData d = readBaseData();
+        int contractMonths = readInt("Строк контракту, місяців (1-60): ");
+        String agency = readNonEmpty("Агенція: ");
+
+        try {
+            Employee employee = new ContractEmployee(d.firstName(), d.lastName(), d.position(),
+                    d.salary(), d.age(), d.department(), contractMonths, agency);
+            EMPLOYEES.add(employee);
+            System.out.println("Працівника за контрактом додано.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Помилка: " + e.getMessage());
+            System.out.println("Працівника не створено.");
+        }
+    }
+
+
     private static void printAll() {
-        if (company.isEmpty()) {
+        if (EMPLOYEES.isEmpty()) {
             System.out.println("Список порожній.");
             return;
         }
-        System.out.println("\n=== Працівники компанії " + company.getName() + " ===");
-        for (int i = 0; i < company.getEmployeeCount(); i++) {
-            System.out.println((i + 1) + ". " + company.getEmployee(i));
+        System.out.println("\n=== Список працівників ===");
+        for (int i = 0; i < EMPLOYEES.size(); i++) {
+            Employee e = EMPLOYEES.get(i);
+            System.out.println((i + 1) + ". [" + e.getEmployeeType() + "] " + e);
         }
     }
 
-    private static void copyEmployee() {
-        if (company.isEmpty()) {
-            System.out.println("Немає кого копіювати: список порожній.");
+    private static void showPolymorphism() {
+        if (EMPLOYEES.isEmpty()) {
+            System.out.println("Список порожній, демонструвати нічого.");
             return;
         }
-        printAll();
-        int number = readIntInRange("Номер працівника для копіювання: ", 1, company.getEmployeeCount());
+        System.out.println("\n=== Демонстрація поліморфізму ===");
+        double total = 0;
+        for (int i = 0; i < EMPLOYEES.size(); i++) {
+            Employee e = EMPLOYEES.get(i); // посилання базового типу
+            double pay = e.calculateMonthlyPay(); // викликається метод реального класу
+            total += pay;
+            System.out.printf("%d. %s %s | %s | виплата за місяць: %.2f%n",
+                    i + 1, e.getFirstName(), e.getLastName(), e.getEmployeeType(), pay);
 
-        try {
-            Employee original = company.getEmployee(number - 1);
-            Employee copy = new Employee(original);
-            company.addEmployee(copy);
-            System.out.println("Копію створено: " + copy);
-            System.out.println("original.equals(copy): " + original.equals(copy));
-            System.out.println("original == copy: " + (original == copy));
-        } catch (IllegalArgumentException e) {
-            System.out.println("Помилка: " + e.getMessage());
+            if (e instanceof FullTimeEmployee fullTime) {
+                System.out.printf("   премія: %.2f, днів відпустки: %d%n",
+                        fullTime.getBonus(), fullTime.getVacationDays());
+            } else if (e instanceof ContractEmployee contract) {
+                System.out.printf("   контракт: %d міс., агенція: %s, вартість контракту: %.2f%n",
+                        contract.getContractMonths(), contract.getAgency(), contract.getTotalContractCost());
+            }
         }
+        System.out.printf("Разом виплат за місяць: %.2f%n", total);
     }
-
-    private static void showCounter() {
-        System.out.println("Створено об'єктів Employee (Employee.getCount()): " + Employee.getCount());
-        System.out.println("Зараз у компанії працівників: " + company.getEmployeeCount());
-    }
-
-    private static void showStatistics() {
-        if (company.isEmpty()) {
-            System.out.println("Список порожній, статистики немає.");
-            return;
-        }
-        System.out.println("\n=== Статистика: " + company + " ===");
-        System.out.printf("Сумарна зарплата: %.2f%n", company.getTotalSalary());
-        System.out.printf("Середня зарплата: %.2f%n", company.getAverageSalary());
-        System.out.println("За відділами:");
-        for (Department d : Department.values()) {
-            System.out.println("  " + d + ": " + company.countByDepartment(d));
-        }
-    }
-
-    private static String readLine(String prompt) {
+private static String readLine(String prompt) {
         System.out.print(prompt);
         if (!SCANNER.hasNextLine()) {
             System.out.println("\nВведення завершено.");
