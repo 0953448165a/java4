@@ -1,21 +1,27 @@
-import java.util.Scanner; 
+import java.util.ArrayList;
+import java.util.Scanner;
 
-
+/**
+ * Драйвер програми: консольне меню для роботи зі списком працівників.
+ * Містить інформаційну шапку програми. Некоректне введення не завершує програму.
+ */
 public class Main {
 
-   
     private static final String PROGRAM_TITLE =
-            "Практична робота №6: класи, static, агрегація, enum";
+            "Практична робота №7: наслідування, поліморфізм, колекції";
     private static final String AUTHOR = "Мудрий Ярослав, група ІН-43-5";
-   
 
     private static final Scanner SCANNER = new Scanner(System.in);
-    private static Company company; 
+    private static final ArrayList<Employee> EMPLOYEES = new ArrayList<>();
 
-   
+    /**
+     * Точка входу. Виводить шапку й показує меню,
+     * поки користувач не обере вихід.
+     *
+     * @param args аргументи командного рядка (не використовуються)
+     */
     public static void main(String[] args) {
         printHeader();
-        company = createCompany(); 
 
         boolean running = true;
         while (running) {
@@ -25,17 +31,17 @@ public class Main {
                 case 1 -> createEmployee();
                 case 2 -> printAll();
                 case 3 -> copyEmployee();
-					 case 4 -> showStatistics();
-					 case 5 -> {
-					 	running = false;
-						System.out.println("Роботу завершено.");
-					 }
-					default -> System.out.println("Невірний пункт меню. Оберіть число від 1 до 5.");
+                case 4 -> {
+                    running = false;
+                    System.out.println("Роботу завершено.");
+                }
+                default -> System.out.println("Невірний пункт меню. Оберіть число від 1 до 4.");
             }
         }
         SCANNER.close();
     }
 
+    /** Виводить інформаційну шапку програми. */
     private static void printHeader() {
         System.out.println("==============================================");
         System.out.println(PROGRAM_TITLE);
@@ -43,26 +49,19 @@ public class Main {
         System.out.println("==============================================");
     }
 
-    private static Company createCompany() {
-        while (true) {
-            String name = readNonEmpty("Введіть назву компанії: ");
-            try {
-                return new Company(name);
-            } catch (IllegalArgumentException e) {
-                System.out.println("Помилка: " + e.getMessage());
-            }
-        }
-    }
-
+    /** Виводить меню. */
     private static void printMenu() {
-        System.out.println("\n=== МЕНЮ (" + company.getName() + ") ==="); 
+        System.out.println("\n=== МЕНЮ ===");
         System.out.println("1. Створити нового працівника");
         System.out.println("2. Вивести всіх працівників");
-        System.out.println("3. Створити копію працівника (конструктор копіювання)"); 
-        System.out.println("4. Статистика компанії"); 
-        System.out.println("5. Завершити роботу"); 
+        System.out.println("3. Створити копію працівника (конструктор копіювання)");
+        System.out.println("4. Завершити роботу");
     }
 
+    /**
+     * Зчитує дані працівника і додає його до списку.
+     * Якщо дані некоректні, виняток перехоплюється й програма повертається в меню.
+     */
     private static void createEmployee() {
         System.out.println("\n--- Новий працівник ---");
         String firstName = readNonEmpty("Ім'я: ");
@@ -74,7 +73,7 @@ public class Main {
 
         try {
             Employee employee = new Employee(firstName, lastName, position, salary, age, department);
-            company.addEmployee(employee);
+            EMPLOYEES.add(employee);
             System.out.println("Працівника додано.");
         } catch (IllegalArgumentException e) {
             System.out.println("Помилка: " + e.getMessage());
@@ -82,29 +81,34 @@ public class Main {
         }
     }
 
+    /** Виводить усіх працівників зі списку через toString(). */
     private static void printAll() {
-        if (company.isEmpty()) {
+        if (EMPLOYEES.isEmpty()) {
             System.out.println("Список порожній.");
             return;
         }
-        System.out.println("\n=== Працівники компанії " + company.getName() + " ===");
-        for (int i = 0; i < company.getEmployeeCount(); i++) {
-            System.out.println((i + 1) + ". " + company.getEmployee(i));
+        System.out.println("\n=== Список працівників ===");
+        for (int i = 0; i < EMPLOYEES.size(); i++) {
+            System.out.println((i + 1) + ". " + EMPLOYEES.get(i));
         }
     }
 
+    /**
+     * Створює копію обраного працівника через конструктор копіювання
+     * і демонструє різницю між equals() та порівнянням посилань.
+     */
     private static void copyEmployee() {
-        if (company.isEmpty()) {
+        if (EMPLOYEES.isEmpty()) {
             System.out.println("Немає кого копіювати: список порожній.");
             return;
         }
         printAll();
-        int number = readIntInRange("Номер працівника для копіювання: ", 1, company.getEmployeeCount());
+        int number = readIntInRange("Номер працівника для копіювання: ", 1, EMPLOYEES.size());
 
         try {
-            Employee original = company.getEmployee(number - 1);
+            Employee original = EMPLOYEES.get(number - 1);
             Employee copy = new Employee(original);
-            company.addEmployee(copy);
+            EMPLOYEES.add(copy);
             System.out.println("Копію створено: " + copy);
             System.out.println("original.equals(copy): " + original.equals(copy));
             System.out.println("original == copy: " + (original == copy));
@@ -113,22 +117,7 @@ public class Main {
         }
     }
 
-
-    private static void showStatistics() {
-        if (company.isEmpty()) {
-            System.out.println("Список порожній, статистики немає.");
-            return;
-        }
-        System.out.println("\n=== Статистика: " + company + " ===");
-        System.out.printf("Сумарна зарплата: %.2f%n", company.getTotalSalary());
-        System.out.printf("Середня зарплата: %.2f%n", company.getAverageSalary());
-        System.out.println("За відділами:");
-        for (Department d : Department.values()) {
-            System.out.println("  " + d + ": " + company.countByDepartment(d));
-        }
-    }
-
-    private static String readLine(String prompt) {
+private static String readLine(String prompt) {
         System.out.print(prompt);
         if (!SCANNER.hasNextLine()) {
             System.out.println("\nВведення завершено.");
