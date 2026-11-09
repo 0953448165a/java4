@@ -117,14 +117,26 @@ public class Employee {
         this.department = department;
     }
 
-    @Override
-    public String toString() {
-        return "Employee{firstName='" + firstName +
+    public String getEmployeeType() {
+        return "Працівник";
+    }
+
+    public double calculateMonthlyPay() {
+        return salary;
+    }
+
+    protected String baseFieldsToString() {
+        return "firstName='" + firstName +
                 "', lastName='" + lastName +
                 "', position='" + position +
                 "', salary=" + salary +
                 ", age=" + age +
-                ", department=" + department + "}";
+                ", department=" + department;
+    }
+
+    @Override
+    public String toString() {
+        return "Employee{" + baseFieldsToString() + "}";
     }
 
     @Override
