@@ -27,11 +27,12 @@ public class Main {
                 case 2 -> createFullTimeEmployee();
                 case 3 -> createContractEmployee();
                 case 4 -> printAll();
-                case 5 -> {
+                case 5 -> showPolymorphism();
+                case 6 -> {
                     running = false;
                     System.out.println("Роботу завершено.");
                 }
-                default -> System.out.println("Невірний пункт меню. Оберіть число від 1 до 5.");
+                default -> System.out.println("Невірний пункт меню. Оберіть число від 1 до 6.");
             }
         }
         SCANNER.close();
@@ -52,7 +53,8 @@ public class Main {
         System.out.println("2. Створити штатного працівника (FullTimeEmployee)");
         System.out.println("3. Створити працівника за контрактом (ContractEmployee)");
         System.out.println("4. Вивести всіх працівників");
-        System.out.println("5. Завершити роботу");
+        System.out.println("5. Демонстрація поліморфізму (виплати за місяць)");
+        System.out.println("6. Завершити роботу");
     }
 
 
@@ -115,7 +117,7 @@ public class Main {
         }
     }
 
-    /** Виводить усіх працівників зі списку через toString(). */
+
     private static void printAll() {
         if (EMPLOYEES.isEmpty()) {
             System.out.println("Список порожній.");
@@ -123,8 +125,34 @@ public class Main {
         }
         System.out.println("\n=== Список працівників ===");
         for (int i = 0; i < EMPLOYEES.size(); i++) {
-            System.out.println((i + 1) + ". " + EMPLOYEES.get(i));
+            Employee e = EMPLOYEES.get(i);
+            System.out.println((i + 1) + ". [" + e.getEmployeeType() + "] " + e);
         }
+    }
+
+    private static void showPolymorphism() {
+        if (EMPLOYEES.isEmpty()) {
+            System.out.println("Список порожній, демонструвати нічого.");
+            return;
+        }
+        System.out.println("\n=== Демонстрація поліморфізму ===");
+        double total = 0;
+        for (int i = 0; i < EMPLOYEES.size(); i++) {
+            Employee e = EMPLOYEES.get(i); // посилання базового типу
+            double pay = e.calculateMonthlyPay(); // викликається метод реального класу
+            total += pay;
+            System.out.printf("%d. %s %s | %s | виплата за місяць: %.2f%n",
+                    i + 1, e.getFirstName(), e.getLastName(), e.getEmployeeType(), pay);
+
+            if (e instanceof FullTimeEmployee fullTime) {
+                System.out.printf("   премія: %.2f, днів відпустки: %d%n",
+                        fullTime.getBonus(), fullTime.getVacationDays());
+            } else if (e instanceof ContractEmployee contract) {
+                System.out.printf("   контракт: %d міс., агенція: %s, вартість контракту: %.2f%n",
+                        contract.getContractMonths(), contract.getAgency(), contract.getTotalContractCost());
+            }
+        }
+        System.out.printf("Разом виплат за місяць: %.2f%n", total);
     }
 private static String readLine(String prompt) {
         System.out.print(prompt);
