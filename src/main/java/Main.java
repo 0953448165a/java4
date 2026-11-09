@@ -1,10 +1,6 @@
 import java.util.ArrayList;
 import java.util.Scanner;
 
-/**
- * Драйвер програми: консольне меню для роботи зі списком працівників.
- * Містить інформаційну шапку програми. Некоректне введення не завершує програму.
- */
 public class Main {
 
     private static final String PROGRAM_TITLE =
@@ -14,12 +10,11 @@ public class Main {
     private static final Scanner SCANNER = new Scanner(System.in);
     private static final ArrayList<Employee> EMPLOYEES = new ArrayList<>();
 
-    /**
-     * Точка входу. Виводить шапку й показує меню,
-     * поки користувач не обере вихід.
-     *
-     * @param args аргументи командного рядка (не використовуються)
-     */
+    /** Спільні дані, які зчитуються для працівника будь-якого типу. */
+    private record BaseData(String firstName, String lastName, String position,
+                            double salary, int age, Department department) {
+    }
+
     public static void main(String[] args) {
         printHeader();
 
@@ -29,13 +24,14 @@ public class Main {
             int choice = readInt("Ваш вибір: ");
             switch (choice) {
                 case 1 -> createEmployee();
-                case 2 -> printAll();
-                case 3 -> copyEmployee();
-                case 4 -> {
+                case 2 -> createFullTimeEmployee();
+                case 3 -> createContractEmployee();
+                case 4 -> printAll();
+                case 5 -> {
                     running = false;
                     System.out.println("Роботу завершено.");
                 }
-                default -> System.out.println("Невірний пункт меню. Оберіть число від 1 до 4.");
+                default -> System.out.println("Невірний пункт меню. Оберіть число від 1 до 5.");
             }
         }
         SCANNER.close();
@@ -52,29 +48,67 @@ public class Main {
     /** Виводить меню. */
     private static void printMenu() {
         System.out.println("\n=== МЕНЮ ===");
-        System.out.println("1. Створити нового працівника");
-        System.out.println("2. Вивести всіх працівників");
-        System.out.println("3. Створити копію працівника (конструктор копіювання)");
-        System.out.println("4. Завершити роботу");
+        System.out.println("1. Створити працівника (Employee)");
+        System.out.println("2. Створити штатного працівника (FullTimeEmployee)");
+        System.out.println("3. Створити працівника за контрактом (ContractEmployee)");
+        System.out.println("4. Вивести всіх працівників");
+        System.out.println("5. Завершити роботу");
     }
 
-    /**
-     * Зчитує дані працівника і додає його до списку.
-     * Якщо дані некоректні, виняток перехоплюється й програма повертається в меню.
-     */
-    private static void createEmployee() {
-        System.out.println("\n--- Новий працівник ---");
+
+    private static BaseData readBaseData() {
         String firstName = readNonEmpty("Ім'я: ");
         String lastName = readNonEmpty("Прізвище: ");
         String position = readNonEmpty("Посада: ");
         double salary = readDouble("Зарплата: ");
         int age = readInt("Вік: ");
         Department department = readDepartment();
+        return new BaseData(firstName, lastName, position, salary, age, department);
+    }
+
+    private static void createEmployee() {
+        System.out.println("\n--- Новий працівник ---");
+        BaseData d = readBaseData();
 
         try {
-            Employee employee = new Employee(firstName, lastName, position, salary, age, department);
+            Employee employee = new Employee(d.firstName(), d.lastName(), d.position(),
+                    d.salary(), d.age(), d.department());
             EMPLOYEES.add(employee);
             System.out.println("Працівника додано.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Помилка: " + e.getMessage());
+            System.out.println("Працівника не створено.");
+        }
+    }
+
+    private static void createFullTimeEmployee() {
+        System.out.println("\n--- Новий штатний працівник ---");
+        BaseData d = readBaseData();
+        double bonus = readDouble("Щомісячна премія: ");
+        int vacationDays = readInt("Днів відпустки на рік (0-60): ");
+
+        try {
+            Employee employee = new FullTimeEmployee(d.firstName(), d.lastName(), d.position(),
+                    d.salary(), d.age(), d.department(), bonus, vacationDays);
+            EMPLOYEES.add(employee);
+            System.out.println("Штатного працівника додано.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("Помилка: " + e.getMessage());
+            System.out.println("Працівника не створено.");
+        }
+    }
+
+    private static void createContractEmployee() {
+        System.out.println("\n--- Новий працівник за контрактом ---");
+        BaseData d = readBaseData();
+        int contractMonths = readInt("Строк контракту, місяців (1-60): ");
+        String agency = readNonEmpty("Агенція: ");
+
+        try {
+            Employee employee = new ContractEmployee(d.firstName(), d.lastName(), d.position(),
+                    d.salary(), d.age(), d.department(), contractMonths, agency);
+            EMPLOYEES.add(employee);
+            System.out.println("Працівника за контрактом додано.");
         } catch (IllegalArgumentException e) {
             System.out.println("Помилка: " + e.getMessage());
             System.out.println("Працівника не створено.");
@@ -92,31 +126,6 @@ public class Main {
             System.out.println((i + 1) + ". " + EMPLOYEES.get(i));
         }
     }
-
-    /**
-     * Створює копію обраного працівника через конструктор копіювання
-     * і демонструє різницю між equals() та порівнянням посилань.
-     */
-    private static void copyEmployee() {
-        if (EMPLOYEES.isEmpty()) {
-            System.out.println("Немає кого копіювати: список порожній.");
-            return;
-        }
-        printAll();
-        int number = readIntInRange("Номер працівника для копіювання: ", 1, EMPLOYEES.size());
-
-        try {
-            Employee original = EMPLOYEES.get(number - 1);
-            Employee copy = new Employee(original);
-            EMPLOYEES.add(copy);
-            System.out.println("Копію створено: " + copy);
-            System.out.println("original.equals(copy): " + original.equals(copy));
-            System.out.println("original == copy: " + (original == copy));
-        } catch (IllegalArgumentException e) {
-            System.out.println("Помилка: " + e.getMessage());
-        }
-    }
-
 private static String readLine(String prompt) {
         System.out.print(prompt);
         if (!SCANNER.hasNextLine()) {
