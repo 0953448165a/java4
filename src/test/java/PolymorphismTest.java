@@ -11,12 +11,14 @@ class PolymorphismTest {
         list.add(new Employee("Іван", "Петренко", "Менеджер", 10000, 40, Department.SALES));
         list.add(new FullTimeEmployee("Ярослав", "Мудрий", "Розробник", 30000, 25, Department.IT, 5000, 24));
         list.add(new ContractEmployee("Олег", "Бойко", "Тестувальник", 20000, 30, Department.SUPPORT, 6, "TechStaff"));
+        list.add(new Manager("Марія", "Коваль", "Керівник відділу", 40000, 38, Department.IT, 10000, 28, 5, "Alpha"));
+        list.add(new Intern("Андрій", "Шевченко", "Стажист", 12000, 20, Department.IT, "СумДУ", 3, "Ярослав Мудрий"));
         return list;
     }
 
     @Test
     void listShouldHoldObjectsOfAllTypes() {
-        assertEquals(3, createList().size());
+        assertEquals(5, createList().size());
     }
 
     @Test
@@ -26,10 +28,14 @@ class PolymorphismTest {
         assertEquals("Працівник", list.get(0).getEmployeeType());
         assertEquals("Штатний працівник", list.get(1).getEmployeeType());
         assertEquals("Працівник за контрактом", list.get(2).getEmployeeType());
+        assertEquals("Керівник", list.get(3).getEmployeeType());
+        assertEquals("Стажист", list.get(4).getEmployeeType());
 
         assertEquals(10000, list.get(0).calculateMonthlyPay());
         assertEquals(35000, list.get(1).calculateMonthlyPay());
         assertEquals(20000, list.get(2).calculateMonthlyPay());
+        assertEquals(55000, list.get(3).calculateMonthlyPay());
+        assertEquals(6000, list.get(4).calculateMonthlyPay());
     }
 
     @Test
@@ -39,6 +45,8 @@ class PolymorphismTest {
         assertTrue(list.get(0).toString().startsWith("Employee{"));
         assertTrue(list.get(1).toString().startsWith("FullTimeEmployee{"));
         assertTrue(list.get(2).toString().startsWith("ContractEmployee{"));
+        assertTrue(list.get(3).toString().startsWith("Manager{"));
+        assertTrue(list.get(4).toString().startsWith("Intern{"));
     }
 
     @Test
@@ -47,7 +55,7 @@ class PolymorphismTest {
         for (Employee e : createList()) {
             total += e.calculateMonthlyPay();
         }
-        assertEquals(65000, total);
+        assertEquals(126000, total);
     }
 
     @Test
