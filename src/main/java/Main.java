@@ -4,12 +4,13 @@ import java.util.Scanner;
 public class Main {
 
     private static final String PROGRAM_TITLE =
-            "Практична робота №8: розширення ієрархії, поліморфізм, меню";
+            "Практична робота №9: ієрархія класів, робота з файлами";
     private static final String AUTHOR = "Мудрий Ярослав, група ІН-43-5";
 
     private static final Scanner SCANNER = new Scanner(System.in);
-    // На старті колекція порожня: жодного попереднього заповнення і читання з файлів
+    // Колекція заповнюється лише даними, зчитаними з файлу на старті програми
     private static final ArrayList<Employee> EMPLOYEES = new ArrayList<>();
+    private static DataStorage storage;
 
     /** Спільні дані, які зчитуються для працівника будь-якого типу. */
     private record BaseData(String firstName, String lastName, String position,
@@ -19,6 +20,9 @@ public class Main {
     public static void main(String[] args) {
         printHeader();
 
+        storage = chooseStorage();
+        EMPLOYEES.addAll(storage.load());
+
         boolean running = true;
         while (running) {
             printMenu();
@@ -27,6 +31,7 @@ public class Main {
                 case 1 -> createObject();
                 case 2 -> printAll();
                 case 3 -> {
+                    storage.save(EMPLOYEES);
                     running = false;
                     System.out.println("Роботу завершено.");
                 }
@@ -42,6 +47,18 @@ public class Main {
         System.out.println(PROGRAM_TITLE);
         System.out.println("Виконав: " + AUTHOR);
         System.out.println("==============================================");
+    }
+
+    /** Дає змогу обрати формат файлу, з яким працюватиме програма. */
+    private static DataStorage chooseStorage() {
+        System.out.println("\nОберіть формат файлу даних:");
+        System.out.println("1. input.txt (текстовий формат)");
+        System.out.println("2. input.json (JSON)");
+        int choice = readIntInRange("Формат: ", 1, 2);
+        if (choice == 1) {
+            return new TextStorage("input.txt");
+        }
+        return new JsonStorage("input.json");
     }
 
     /** Виводить головне меню. */
@@ -226,6 +243,9 @@ public class Main {
         System.out.print(prompt);
         if (!SCANNER.hasNextLine()) {
             System.out.println("\nВведення завершено.");
+            if (storage != null) {
+                storage.save(EMPLOYEES);
+            }
             System.exit(0);
         }
         return SCANNER.nextLine().trim();
