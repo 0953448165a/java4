@@ -4,7 +4,7 @@ import java.util.Scanner;
 public class Main {
 
     private static final String PROGRAM_TITLE =
-            "Практична робота №9: ієрархія класів, робота з файлами";
+            "Практична робота №10: пошук у колекціях";
     private static final String AUTHOR = "Мудрий Ярослав, група ІН-43-5";
 
     private static final Scanner SCANNER = new Scanner(System.in);
@@ -28,14 +28,15 @@ public class Main {
             printMenu();
             int choice = readInt("Ваш вибір: ");
             switch (choice) {
-                case 1 -> createObject();
-                case 2 -> printAll();
-                case 3 -> {
+                case 1 -> searchMenu();
+                case 2 -> createObject();
+                case 3 -> printAll();
+                case 4 -> {
                     storage.save(EMPLOYEES);
                     running = false;
                     System.out.println("Роботу завершено.");
                 }
-                default -> System.out.println("Невірний пункт меню. Оберіть число від 1 до 3.");
+                default -> System.out.println("Невірний пункт меню. Оберіть число від 1 до 4.");
             }
         }
         SCANNER.close();
@@ -64,10 +65,151 @@ public class Main {
     /** Виводить головне меню. */
     private static void printMenu() {
         System.out.println("\n=== МЕНЮ ===");
-        System.out.println("1. Створити новий об'єкт");
-        System.out.println("2. Вивести інформацію про всі об'єкти");
-        System.out.println("3. Завершити роботу програми");
+        System.out.println("1. Пошук об'єкта");
+        System.out.println("2. Створити новий об'єкт");
+        System.out.println("3. Вивести інформацію про всі об'єкти");
+        System.out.println("4. Завершити роботу програми");
     }
+
+    // ===================== Підменю пошуку =====================
+
+    /** Підменю пошуку. Пункт 0 повертає в головне меню. */
+    private static void searchMenu() {
+        while (true) {
+            System.out.println("\n--- Пошук об'єкта ---");
+            System.out.println("1. За прізвищем");
+            System.out.println("2. За відділом");
+            System.out.println("3. За діапазоном зарплати");
+            System.out.println("4. За діапазоном віку");
+            System.out.println("5. За типом працівника");
+            System.out.println("0. Назад до головного меню");
+            int choice = readInt("Критерій: ");
+            switch (choice) {
+                case 0 -> {
+                    return;
+                }
+                case 1 -> runSearchByLastName();
+                case 2 -> runSearchByDepartment();
+                case 3 -> runSearchBySalaryRange();
+                case 4 -> runSearchByAgeRange();
+                case 5 -> runSearchByType();
+                default -> System.out.println("Невірний пункт. Оберіть число від 0 до 5.");
+            }
+        }
+    }
+
+    private static void runSearchByLastName() {
+        String query = readNonEmpty("Введіть прізвище або його частину: ");
+        ArrayList<Employee> found = searchByLastName(EMPLOYEES, query);
+        printSearchResult("прізвище містить «" + query + "»", found);
+    }
+
+    private static void runSearchByDepartment() {
+        Department department = readDepartment();
+        ArrayList<Employee> found = searchByDepartment(EMPLOYEES, department);
+        printSearchResult("відділ " + department, found);
+    }
+
+    private static void runSearchBySalaryRange() {
+        double min = readDouble("Мінімальна зарплата: ");
+        double max = readDouble("Максимальна зарплата: ");
+        if (min > max) {
+            System.out.println("Помилка: мінімум не може бути більшим за максимум.");
+            return;
+        }
+        ArrayList<Employee> found = searchBySalaryRange(EMPLOYEES, min, max);
+        printSearchResult("зарплата від " + min + " до " + max, found);
+    }
+
+    private static void runSearchByAgeRange() {
+        int min = readInt("Мінімальний вік: ");
+        int max = readInt("Максимальний вік: ");
+        if (min > max) {
+            System.out.println("Помилка: мінімум не може бути більшим за максимум.");
+            return;
+        }
+        ArrayList<Employee> found = searchByAgeRange(EMPLOYEES, min, max);
+        printSearchResult("вік від " + min + " до " + max, found);
+    }
+
+    private static void runSearchByType() {
+        String typeName = readTypeName();
+        ArrayList<Employee> found = searchByType(EMPLOYEES, typeName);
+        printSearchResult("тип " + typeName, found);
+    }
+
+    /** Виводить результат пошуку або повідомлення про відсутність збігів. */
+    private static void printSearchResult(String criterion, ArrayList<Employee> found) {
+        System.out.println("\nКритерій: " + criterion);
+        if (found.isEmpty()) {
+            System.out.println("Об'єктів, що відповідають умовам пошуку, не знайдено.");
+            return;
+        }
+        System.out.println("Знайдено об'єктів: " + found.size());
+        for (int i = 0; i < found.size(); i++) {
+            printEmployee(i + 1, found.get(i));
+        }
+    }
+
+    // ===================== Пошук (колекція не змінюється) =====================
+
+    /** Шукає працівників, прізвище яких містить заданий рядок (без урахування регістру). */
+    static ArrayList<Employee> searchByLastName(ArrayList<Employee> source, String query) {
+        ArrayList<Employee> found = new ArrayList<>();
+        String needle = query.trim().toLowerCase();
+        for (Employee e : source) {
+            if (e.getLastName().toLowerCase().contains(needle)) {
+                found.add(e);
+            }
+        }
+        return found;
+    }
+
+    /** Шукає працівників заданого відділу. */
+    static ArrayList<Employee> searchByDepartment(ArrayList<Employee> source, Department department) {
+        ArrayList<Employee> found = new ArrayList<>();
+        for (Employee e : source) {
+            if (e.getDepartment() == department) {
+                found.add(e);
+            }
+        }
+        return found;
+    }
+
+    /** Шукає працівників із зарплатою в діапазоні [min; max] (межі включно). */
+    static ArrayList<Employee> searchBySalaryRange(ArrayList<Employee> source, double min, double max) {
+        ArrayList<Employee> found = new ArrayList<>();
+        for (Employee e : source) {
+            if (e.getSalary() >= min && e.getSalary() <= max) {
+                found.add(e);
+            }
+        }
+        return found;
+    }
+
+    /** Шукає працівників віком у діапазоні [min; max] (межі включно). */
+    static ArrayList<Employee> searchByAgeRange(ArrayList<Employee> source, int min, int max) {
+        ArrayList<Employee> found = new ArrayList<>();
+        for (Employee e : source) {
+            if (e.getAge() >= min && e.getAge() <= max) {
+                found.add(e);
+            }
+        }
+        return found;
+    }
+
+    /** Шукає об'єкти точного класу (наприклад, "Manager" не знайде FullTimeEmployee і навпаки). */
+    static ArrayList<Employee> searchByType(ArrayList<Employee> source, String typeName) {
+        ArrayList<Employee> found = new ArrayList<>();
+        for (Employee e : source) {
+            if (e.getClass().getSimpleName().equals(typeName)) {
+                found.add(e);
+            }
+        }
+        return found;
+    }
+
+    // ===================== Створення об'єктів =====================
 
     /** Підменю вибору типу об'єкта. Пункт 0 повертає в головне меню без створення. */
     private static void createObject() {
@@ -206,7 +348,9 @@ public class Main {
         }
     }
 
-        /** Виводить усі об'єкти колекції та демонструє поліморфізм. */
+    // ===================== Вивід =====================
+
+    /** Виводить усі об'єкти колекції та демонструє поліморфізм. */
     private static void printAll() {
         if (EMPLOYEES.isEmpty()) {
             System.out.println("Список порожній.");
@@ -243,63 +387,7 @@ public class Main {
         return pay;
     }
 
-	     // ===================== Пошук (колекція не змінюється) =====================
-
-    /** Шукає працівників, прізвище яких містить заданий рядок (без урахування регістру). */
-    static ArrayList<Employee> searchByLastName(ArrayList<Employee> source, String query) {
-        ArrayList<Employee> found = new ArrayList<>();
-        String needle = query.trim().toLowerCase();
-        for (Employee e : source) {
-            if (e.getLastName().toLowerCase().contains(needle)) {
-                found.add(e);
-            }
-        }
-        return found;
-    }
-
-    /** Шукає працівників заданого відділу. */
-    static ArrayList<Employee> searchByDepartment(ArrayList<Employee> source, Department department) {
-        ArrayList<Employee> found = new ArrayList<>();
-        for (Employee e : source) {
-            if (e.getDepartment() == department) {
-                found.add(e);
-            }
-        }
-        return found;
-    }
-
-    /** Шукає працівників із зарплатою в діапазоні [min; max] (межі включно). */
-    static ArrayList<Employee> searchBySalaryRange(ArrayList<Employee> source, double min, double max) {
-        ArrayList<Employee> found = new ArrayList<>();
-        for (Employee e : source) {
-            if (e.getSalary() >= min && e.getSalary() <= max) {
-                found.add(e);
-            }
-        }
-        return found;
-    }
-
-    /** Шукає працівників віком у діапазоні [min; max] (межі включно). */
-    static ArrayList<Employee> searchByAgeRange(ArrayList<Employee> source, int min, int max) {
-        ArrayList<Employee> found = new ArrayList<>();
-        for (Employee e : source) {
-            if (e.getAge() >= min && e.getAge() <= max) {
-                found.add(e);
-            }
-        }
-        return found;
-    }
-
-    /** Шукає об'єкти точного класу (наприклад, "Manager" не знайде FullTimeEmployee і навпаки). */
-    static ArrayList<Employee> searchByType(ArrayList<Employee> source, String typeName) {
-        ArrayList<Employee> found = new ArrayList<>();
-        for (Employee e : source) {
-            if (e.getClass().getSimpleName().equals(typeName)) {
-                found.add(e);
-            }
-        }
-        return found;
-    }
+    // ===================== Введення =====================
 
     private static String readLine(String prompt) {
         System.out.print(prompt);
@@ -363,5 +451,16 @@ public class Main {
         }
         int choice = readIntInRange("Номер відділу: ", 1, values.length);
         return values[choice - 1];
+    }
+
+    /** Дає змогу обрати тип працівника для пошуку. Повертає назву класу. */
+    private static String readTypeName() {
+        String[] names = {"Employee", "FullTimeEmployee", "ContractEmployee", "Manager", "Intern"};
+        System.out.println("Оберіть тип працівника:");
+        for (int i = 0; i < names.length; i++) {
+            System.out.println((i + 1) + ". " + names[i]);
+        }
+        int choice = readIntInRange("Тип: ", 1, names.length);
+        return names[choice - 1];
     }
 }
