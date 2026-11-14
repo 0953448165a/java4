@@ -243,6 +243,64 @@ public class Main {
         return pay;
     }
 
+	     // ===================== Пошук (колекція не змінюється) =====================
+
+    /** Шукає працівників, прізвище яких містить заданий рядок (без урахування регістру). */
+    static ArrayList<Employee> searchByLastName(ArrayList<Employee> source, String query) {
+        ArrayList<Employee> found = new ArrayList<>();
+        String needle = query.trim().toLowerCase();
+        for (Employee e : source) {
+            if (e.getLastName().toLowerCase().contains(needle)) {
+                found.add(e);
+            }
+        }
+        return found;
+    }
+
+    /** Шукає працівників заданого відділу. */
+    static ArrayList<Employee> searchByDepartment(ArrayList<Employee> source, Department department) {
+        ArrayList<Employee> found = new ArrayList<>();
+        for (Employee e : source) {
+            if (e.getDepartment() == department) {
+                found.add(e);
+            }
+        }
+        return found;
+    }
+
+    /** Шукає працівників із зарплатою в діапазоні [min; max] (межі включно). */
+    static ArrayList<Employee> searchBySalaryRange(ArrayList<Employee> source, double min, double max) {
+        ArrayList<Employee> found = new ArrayList<>();
+        for (Employee e : source) {
+            if (e.getSalary() >= min && e.getSalary() <= max) {
+                found.add(e);
+            }
+        }
+        return found;
+    }
+
+    /** Шукає працівників віком у діапазоні [min; max] (межі включно). */
+    static ArrayList<Employee> searchByAgeRange(ArrayList<Employee> source, int min, int max) {
+        ArrayList<Employee> found = new ArrayList<>();
+        for (Employee e : source) {
+            if (e.getAge() >= min && e.getAge() <= max) {
+                found.add(e);
+            }
+        }
+        return found;
+    }
+
+    /** Шукає об'єкти точного класу (наприклад, "Manager" не знайде FullTimeEmployee і навпаки). */
+    static ArrayList<Employee> searchByType(ArrayList<Employee> source, String typeName) {
+        ArrayList<Employee> found = new ArrayList<>();
+        for (Employee e : source) {
+            if (e.getClass().getSimpleName().equals(typeName)) {
+                found.add(e);
+            }
+        }
+        return found;
+    }
+
     private static String readLine(String prompt) {
         System.out.print(prompt);
         if (!SCANNER.hasNextLine()) {
