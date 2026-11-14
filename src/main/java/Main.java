@@ -206,7 +206,7 @@ public class Main {
         }
     }
 
-    /** Виводить усі об'єкти колекції та демонструє поліморфізм. */
+        /** Виводить усі об'єкти колекції та демонструє поліморфізм. */
     private static void printAll() {
         if (EMPLOYEES.isEmpty()) {
             System.out.println("Список порожній.");
@@ -215,28 +215,32 @@ public class Main {
         System.out.println("\n=== Список об'єктів ===");
         double total = 0;
         for (int i = 0; i < EMPLOYEES.size(); i++) {
-            Employee e = EMPLOYEES.get(i); // посилання базового типу
-            double pay = e.calculateMonthlyPay(); // викликається метод реального класу
-            total += pay;
-            System.out.println((i + 1) + ". [" + e.getEmployeeType() + "] " + e);
-            System.out.printf("   виплата за місяць: %.2f%n", pay);
-
-            // Manager перевіряється раніше за FullTimeEmployee, бо є його нащадком
-            if (e instanceof Manager m) {
-                System.out.printf("   команда: %d, проєкт: %s, надбавка за керування: %.2f%n",
-                        m.getTeamSize(), m.getProjectName(), m.getManagementAllowance());
-            } else if (e instanceof FullTimeEmployee f) {
-                System.out.printf("   премія: %.2f, днів відпустки: %d%n",
-                        f.getBonus(), f.getVacationDays());
-            } else if (e instanceof ContractEmployee c) {
-                System.out.printf("   контракт: %d міс., агенція: %s, вартість контракту: %.2f%n",
-                        c.getContractMonths(), c.getAgency(), c.getTotalContractCost());
-            } else if (e instanceof Intern in) {
-                System.out.printf("   університет: %s, ментор: %s, виплата за стажування: %.2f%n",
-                        in.getUniversity(), in.getMentorName(), in.getTotalStipend());
-            }
+            total += printEmployee(i + 1, EMPLOYEES.get(i));
         }
         System.out.printf("Разом виплат за місяць: %.2f%n", total);
+    }
+
+    /** Виводить один об'єкт із додатковими полями нащадка. Повертає його місячну виплату. */
+    private static double printEmployee(int number, Employee e) {
+        double pay = e.calculateMonthlyPay(); // викликається метод реального класу
+        System.out.println(number + ". [" + e.getEmployeeType() + "] " + e);
+        System.out.printf("   виплата за місяць: %.2f%n", pay);
+
+        // Manager перевіряється раніше за FullTimeEmployee, бо є його нащадком
+        if (e instanceof Manager m) {
+            System.out.printf("   команда: %d, проєкт: %s, надбавка за керування: %.2f%n",
+                    m.getTeamSize(), m.getProjectName(), m.getManagementAllowance());
+        } else if (e instanceof FullTimeEmployee f) {
+            System.out.printf("   премія: %.2f, днів відпустки: %d%n",
+                    f.getBonus(), f.getVacationDays());
+        } else if (e instanceof ContractEmployee c) {
+            System.out.printf("   контракт: %d міс., агенція: %s, вартість контракту: %.2f%n",
+                    c.getContractMonths(), c.getAgency(), c.getTotalContractCost());
+        } else if (e instanceof Intern in) {
+            System.out.printf("   університет: %s, ментор: %s, виплата за стажування: %.2f%n",
+                    in.getUniversity(), in.getMentorName(), in.getTotalStipend());
+        }
+        return pay;
     }
 
     private static String readLine(String prompt) {
