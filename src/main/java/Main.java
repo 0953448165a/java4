@@ -4,13 +4,14 @@ import java.util.Scanner;
 public class Main {
 
     private static final String PROGRAM_TITLE =
-            "Практична робота №11: колекції, агрегація, класи-обгортки";
+            "Практична робота №12: збереження даних у базі даних (JDBC)";
     private static final String AUTHOR = "Мудрий Ярослав, група ІН-43-5";
     private static final String DEFAULT_FILE = "input.txt";
 
     private static final Scanner SCANNER = new Scanner(System.in);
     private static TextStorage textStorage;
     private static Company company;
+    private static DatabaseManager databaseManager;
 
     private static final class BaseData {
         private final String firstName;
@@ -33,6 +34,8 @@ public class Main {
 
     public static void main(String[] args) {
         printHeader();
+
+        initDatabase(args);
 
         textStorage = new TextStorage(DEFAULT_FILE);
         company = initializeCompany();
@@ -68,6 +71,22 @@ public class Main {
             }
         }
         SCANNER.close();
+    }
+
+    private static void initDatabase(String[] args) {
+        if (args != null && args.length > 0 && !args[0].isBlank()) {
+            String configPath = args[0].trim();
+            try {
+                databaseManager = new DatabaseManager(configPath);
+                databaseManager.testConnection();
+            } catch (Exception e) {
+                System.out.println("Помилка ініціалізації БД: " + e.getMessage());
+                databaseManager = null;
+            }
+        } else {
+            System.out.println("Увага: шлях до конфігураційного файлу БД не передано через args "
+                    + "(приклад: java Main db.properties). Збереження в БД вимкнено.");
+        }
     }
 
     private static Company initializeCompany() {
@@ -248,7 +267,7 @@ public class Main {
         return found;
     }
 
-    // ===================== Додавання об'єктів до компанії =====================
+    // ===================== Додавання об'єктів до компанії та БД =====================
 
     private static void createObject() {
         while (true) {
@@ -300,6 +319,10 @@ public class Main {
         company.addNewEmployee(employee, quantity);
         System.out.println("Операцію виконано. Актуальна кількість для цього працівника у компанії: "
                 + company.getEmployeeQuantity(employee) + " шт.");
+
+        if (databaseManager != null) {
+            databaseManager.insertEmployee(employee, quantity);
+        }
     }
 
     private static void createEmployee() {
