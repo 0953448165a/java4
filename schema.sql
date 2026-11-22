@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS employees (
+    id SERIAL PRIMARY KEY,
+    type VARCHAR(50) NOT NULL,
+    first_name VARCHAR(100) NOT NULL,
+    last_name VARCHAR(100) NOT NULL,
+    position VARCHAR(100) NOT NULL,
+    salary DOUBLE PRECISION NOT NULL,
+    age INT NOT NULL,
+    department VARCHAR(50) NOT NULL,
+    quantity INT NOT NULL DEFAULT 1,
+    bonus DOUBLE PRECISION NULL,
+    vacation_days INT NULL,
+    contract_months INT NULL,
+    agency VARCHAR(150) NULL,
+    team_size INT NULL,
+    project_name VARCHAR(150) NULL,
+    university VARCHAR(150) NULL,
+    internship_months INT NULL,
+    mentor_name VARCHAR(150) NULL
+);
