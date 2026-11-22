@@ -1,4 +1,5 @@
 import java.util.Objects;
+
 public class FullTimeEmployee extends Employee {
 
     private double bonus;
@@ -18,24 +19,22 @@ public class FullTimeEmployee extends Employee {
 
     public void setBonus(double bonus) {
         if (Double.isNaN(bonus) || Double.isInfinite(bonus) || bonus < 0) {
-            throw new IllegalArgumentException("Премія не може бути від'ємною.");
+            throw new InvalidFieldValueException("Премія не може бути від'ємною.");
         }
         this.bonus = bonus;
     }
 
-    /** @return кількість днів відпустки на рік */
     public int getVacationDays() {
         return vacationDays;
     }
 
     public void setVacationDays(int vacationDays) {
         if (vacationDays < 0 || vacationDays > 60) {
-            throw new IllegalArgumentException("Днів відпустки має бути від 0 до 60.");
+            throw new InvalidFieldValueException("Днів відпустки має бути від 0 до 60.");
         }
         this.vacationDays = vacationDays;
     }
 
-    /** @return назва типу працівника */
     @Override
     public String getEmployeeType() {
         return "Штатний працівник";
@@ -56,7 +55,7 @@ public class FullTimeEmployee extends Employee {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!super.equals(o)) return false; // перевіряє також, що клас однаковий
+        if (!super.equals(o)) return false;
         FullTimeEmployee that = (FullTimeEmployee) o;
         return Double.compare(that.bonus, bonus) == 0
                 && vacationDays == that.vacationDays;

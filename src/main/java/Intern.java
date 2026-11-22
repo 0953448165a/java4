@@ -2,7 +2,6 @@ import java.util.Objects;
 
 public class Intern extends Employee {
 
-    /** Стажист отримує частку від ставки. */
     private static final double STIPEND_RATIO = 0.5;
 
     private String university;
@@ -24,7 +23,7 @@ public class Intern extends Employee {
 
     public void setUniversity(String university) {
         if (university == null || university.isBlank()) {
-            throw new IllegalArgumentException("Назва університету не може бути порожньою.");
+            throw new InvalidFieldValueException("Назва університету не може бути порожньою.");
         }
         this.university = university.trim();
     }
@@ -35,7 +34,7 @@ public class Intern extends Employee {
 
     public void setInternshipMonths(int internshipMonths) {
         if (internshipMonths < 1 || internshipMonths > 12) {
-            throw new IllegalArgumentException("Тривалість стажування має бути від 1 до 12 місяців.");
+            throw new InvalidFieldValueException("Тривалість стажування має бути від 1 до 12 місяців.");
         }
         this.internshipMonths = internshipMonths;
     }
@@ -46,12 +45,11 @@ public class Intern extends Employee {
 
     public void setMentorName(String mentorName) {
         if (mentorName == null || mentorName.isBlank()) {
-            throw new IllegalArgumentException("Ім'я ментора не може бути порожнім.");
+            throw new InvalidFieldValueException("Ім'я ментора не може бути порожнім.");
         }
         this.mentorName = mentorName.trim();
     }
 
-    /** @return сумарна виплата стажисту за весь строк стажування */
     public double getTotalStipend() {
         return calculateMonthlyPay() * internshipMonths;
     }

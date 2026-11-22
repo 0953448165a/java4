@@ -32,14 +32,14 @@ public abstract class Employee implements Comparable<Employee>, Identifiable {
 
     private static Employee requireNotNull(Employee other) {
         if (other == null) {
-            throw new IllegalArgumentException("Працівник для копіювання не може бути null.");
+            throw new InvalidFieldValueException("Працівник для копіювання не може бути null.");
         }
         return other;
     }
 
     private static String requireNotBlank(String value, String fieldName) {
         if (value == null || value.isBlank()) {
-            throw new IllegalArgumentException(fieldName + " не може бути порожнім.");
+            throw new InvalidFieldValueException(fieldName + " не може бути порожнім.");
         }
         return value.trim();
     }
@@ -49,12 +49,9 @@ public abstract class Employee implements Comparable<Employee>, Identifiable {
         return uuid;
     }
 
-    /**
-     * Використовується при відновленні збереженого об'єкта зі сховища (TextStorage / JsonStorage).
-     */
     void setUuid(UUID uuid) {
         if (uuid == null) {
-            throw new IllegalArgumentException("UUID не може бути null.");
+            throw new InvalidFieldValueException("UUID не може бути null.");
         }
         this.uuid = uuid;
     }
@@ -89,7 +86,7 @@ public abstract class Employee implements Comparable<Employee>, Identifiable {
 
     public void setSalary(double salary) {
         if (Double.isNaN(salary) || Double.isInfinite(salary) || salary <= 0) {
-            throw new IllegalArgumentException("Зарплата має бути більшою за 0.");
+            throw new InvalidFieldValueException("Зарплата має бути більшою за 0.");
         }
         this.salary = salary;
     }
@@ -100,7 +97,7 @@ public abstract class Employee implements Comparable<Employee>, Identifiable {
 
     public void setAge(int age) {
         if (age < MIN_AGE || age > MAX_AGE) {
-            throw new IllegalArgumentException(
+            throw new InvalidFieldValueException(
                     "Вік має бути від " + MIN_AGE + " до " + MAX_AGE + ".");
         }
         this.age = age;
@@ -112,7 +109,7 @@ public abstract class Employee implements Comparable<Employee>, Identifiable {
 
     public void setDepartment(Department department) {
         if (department == null) {
-            throw new IllegalArgumentException("Відділ не може бути порожнім.");
+            throw new InvalidFieldValueException("Відділ не може бути порожнім.");
         }
         this.department = department;
     }
@@ -133,9 +130,6 @@ public abstract class Employee implements Comparable<Employee>, Identifiable {
                 ", department=" + department;
     }
 
-    /**
-     * Коротке текстове подання об'єкта для списків: тип, ПІБ, посада та UUID.
-     */
     public String toShortString() {
         return getClass().getSimpleName() + ": " + firstName + " " + lastName
                 + " (" + position + ") | UUID: " + uuid;

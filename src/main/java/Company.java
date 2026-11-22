@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Objects;
 import java.util.UUID;
 
 public class Company {
@@ -9,8 +8,13 @@ public class Company {
     private String name;
     private String city;
     private int foundedYear;
+
     private final ArrayList<Employee> employees;
     private final ArrayList<Integer> quantities;
+
+    public Company(String name) {
+        this(name, "Не вказано", 2000);
+    }
 
     public Company(String name, String city, int foundedYear) {
         setName(name);
@@ -20,30 +24,13 @@ public class Company {
         this.quantities = new ArrayList<Integer>();
     }
 
-    public Company(String name) {
-        this(name, "Суми", 2020);
-    }
-
-    public Company(String name, ArrayList<Employee> employees, ArrayList<Integer> quantities) {
-        this(name);
-        if (employees == null || quantities == null) {
-            throw new IllegalArgumentException("Списки працівників та кількостей не можуть бути null.");
-        }
-        if (employees.size() != quantities.size()) {
-            throw new IllegalArgumentException("Кількість записів працівників і кількостей має збігатися.");
-        }
-        for (int i = 0; i < employees.size(); i++) {
-            addNewEmployee(employees.get(i), quantities.get(i));
-        }
-    }
-
     public String getName() {
         return name;
     }
 
     public void setName(String name) {
         if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("Назва компанії не може бути порожньою.");
+            throw new InvalidFieldValueException("Назва компанії не може бути порожньою.");
         }
         this.name = name.trim();
     }
@@ -54,7 +41,7 @@ public class Company {
 
     public void setCity(String city) {
         if (city == null || city.isBlank()) {
-            throw new IllegalArgumentException("Місто не може бути порожнім.");
+            throw new InvalidFieldValueException("Місто компанії не може бути порожнім.");
         }
         this.city = city.trim();
     }
@@ -65,77 +52,19 @@ public class Company {
 
     public void setFoundedYear(int foundedYear) {
         if (foundedYear < 1800 || foundedYear > 2100) {
-            throw new IllegalArgumentException("Рік заснування має бути в межах від 1800 до 2100.");
+            throw new InvalidFieldValueException("Рік заснування має бути від 1800 до 2100.");
         }
         this.foundedYear = foundedYear;
     }
 
-    public ArrayList<Employee> getEmployees() {
-        return new ArrayList<Employee>(employees);
-    }
-
-    public ArrayList<Integer> getQuantities() {
-        return new ArrayList<Integer>(quantities);
-    }
-
-    /**
-     * Повертає новий список усіх унікальних працівників компанії,
-     * відсортований за природним порядком (Comparable).
-     */
-    public ArrayList<Employee> getSortedEmployees() {
-        ArrayList<Employee> sorted = new ArrayList<Employee>(employees);
-        Collections.sort(sorted);
-        return sorted;
-    }
-
-    /**
-     * Повертає новий список усіх унікальних працівників компанії,
-     * відсортований за переданим компаратором (Comparator).
-     */
-    public ArrayList<Employee> getSortedEmployees(Comparator<Employee> comparator) {
-        if (comparator == null) {
-            throw new IllegalArgumentException("Компаратор не може бути null.");
-        }
-        ArrayList<Employee> sorted = new ArrayList<Employee>(employees);
-        Collections.sort(sorted, comparator);
-        return sorted;
-    }
-
-    public int getUniqueEmployeesCount() {
-        return employees.size();
-    }
-
-    public int getTotalHeadcount() {
-        int total = 0;
-        for (int qty : quantities) {
-            total += qty;
-        }
-        return total;
-    }
-
-    public int getTotalEmployeesCount() {
-        return getTotalHeadcount();
-    }
-
-    public boolean isEmpty() {
-        return employees.isEmpty();
-    }
-
-    public int getEmployeeQuantity(Employee employee) {
+    public void addEmployee(Employee employee, int quantity) {
         if (employee == null) {
-            return 0;
-        }
-        int index = employees.indexOf(employee);
-        return index >= 0 ? quantities.get(index) : 0;
-    }
-
-    public void addNewEmployee(Employee employee, int quantity) {
-        if (employee == null) {
-            throw new IllegalArgumentException("Працівник не може бути null.");
+            throw new InvalidFieldValueException("Працівник не може бути null.");
         }
         if (quantity <= 0) {
-            throw new IllegalArgumentException("Кількість працівників має бути більшою за 0.");
+            throw new InvalidFieldValueException("Кількість працівників має бути більшою за 0.");
         }
+
         int index = employees.indexOf(employee);
         if (index >= 0) {
             quantities.set(index, quantities.get(index) + quantity);
@@ -145,30 +74,31 @@ public class Company {
         }
     }
 
-    public void addEmployee(Employee employee, int quantity) {
-        addNewEmployee(employee, quantity);
-    }
-
-    public void addEmployee(Employee employee) {
-        addNewEmployee(employee, 1);
+    public void addNewEmployee(Employee employee, int quantity) {
+        if (employee == null) {
+            throw new InvalidFieldValueException("Працівник не може бути null.");
+        }
+        if (quantity <= 0) {
+            throw new InvalidFieldValueException("Кількість працівників має бути більшою за 0.");
+        }
+        if (employees.contains(employee)) {
+            throw new DuplicateObjectException("Працівник «" + employee.getFirstName() + " "
+                    + employee.getLastName() + "» уже існує у штаті компанії.");
+        }
+        employees.add(employee);
+        quantities.add(quantity);
     }
 
     public boolean removeEmployee(Employee employee, int quantity) {
-        if (employee == null) {
-            throw new IllegalArgumentException("Працівник не може бути null.");
-        }
-        if (quantity <= 0) {
-            throw new IllegalArgumentException("Кількість для видалення має бути більшою за 0.");
+        if (employee == null || quantity <= 0) {
+            return false;
         }
         int index = employees.indexOf(employee);
         if (index < 0) {
             return false;
         }
         int current = quantities.get(index);
-        if (quantity > current) {
-            throw new IllegalArgumentException("Неможливо видалити більше працівників, ніж є у компанії.");
-        }
-        if (quantity == current) {
+        if (quantity >= current) {
             employees.remove(index);
             quantities.remove(index);
         } else {
@@ -177,32 +107,18 @@ public class Company {
         return true;
     }
 
-	 /**
-     * Знаходить об'єкт existingObject у колекції компанії та оновлює його на newObject.
-     *
-     * @param existingObject наявний об'єкт у колекції
-     * @param newObject      оновлений об'єкт працівника
-     * @return true, якщо об'єкт знайдено та оновлено; false, якщо об'єкт не знайдено
-     */
     public boolean update(Employee existingObject, Employee newObject) {
         if (newObject == null) {
-            throw new IllegalArgumentException("Новий об'єкт працівника не може бути null.");
+            throw new InvalidFieldValueException("Новий об'єкт працівника не може бути null.");
         }
         if (existingObject == null) {
-            return false;
+            throw new ObjectNotFoundException("Об'єкт для модифікації не може бути null.");
         }
 
-        int index = employees.indexOf(existingObject);
-        if (index < 0 && existingObject.getUuid() != null) {
-            for (int i = 0; i < employees.size(); i++) {
-                if (existingObject.getUuid().equals(employees.get(i).getUuid())) {
-                    index = i;
-                    break;
-                }
-            }
-        }
+        int index = findEmployeeIndex(existingObject);
         if (index < 0) {
-            return false;
+            throw new ObjectNotFoundException("Працівника «" + existingObject.getFirstName() + " "
+                    + existingObject.getLastName() + "» не знайдено у колекції компанії.");
         }
 
         if (existingObject.getUuid() != null) {
@@ -224,25 +140,62 @@ public class Company {
 
     public boolean delete(Employee existingObject) {
         if (existingObject == null) {
-            return false;
+            throw new ObjectNotFoundException("Об'єкт для видалення не може бути null.");
         }
 
-        int index = employees.indexOf(existingObject);
-        if (index < 0 && existingObject.getUuid() != null) {
-            for (int i = 0; i < employees.size(); i++) {
-                if (existingObject.getUuid().equals(employees.get(i).getUuid())) {
-                    index = i;
-                    break;
-                }
-            }
-        }
+        int index = findEmployeeIndex(existingObject);
         if (index < 0) {
-            return false;
+            throw new ObjectNotFoundException("Працівника «" + existingObject.getFirstName() + " "
+                    + existingObject.getLastName() + "» не знайдено у колекції компанії.");
         }
 
         employees.remove(index);
         quantities.remove(index);
         return true;
+    }
+
+    private int findEmployeeIndex(Employee target) {
+        int index = employees.indexOf(target);
+        if (index < 0 && target.getUuid() != null) {
+            for (int i = 0; i < employees.size(); i++) {
+                if (target.getUuid().equals(employees.get(i).getUuid())) {
+                    return i;
+                }
+            }
+        }
+        return index;
+    }
+
+    public ArrayList<Employee> getEmployees() {
+        return new ArrayList<Employee>(employees);
+    }
+
+    public ArrayList<Integer> getQuantities() {
+        return new ArrayList<Integer>(quantities);
+    }
+
+    public int getEmployeeQuantity(Employee employee) {
+        if (employee == null) {
+            return 0;
+        }
+        int index = employees.indexOf(employee);
+        return index >= 0 ? quantities.get(index) : 0;
+    }
+
+    public int getUniqueEmployeesCount() {
+        return employees.size();
+    }
+
+    public int getTotalHeadcount() {
+        int total = 0;
+        for (int i = 0; i < quantities.size(); i++) {
+            total += quantities.get(i);
+        }
+        return total;
+    }
+
+    public boolean isEmpty() {
+        return employees.isEmpty();
     }
 
     public double calculateTotalMonthlyPayroll() {
@@ -253,70 +206,87 @@ public class Company {
         return total;
     }
 
-    public ArrayList<Employee> searchByLastName(String query) {
-        ArrayList<Employee> found = new ArrayList<Employee>();
-        if (query == null || query.isBlank()) {
-            return found;
+    public ArrayList<Employee> getSortedEmployees(Comparator<Employee> comparator) {
+        if (comparator == null) {
+            throw new InvalidFieldValueException("Компаратор не може бути null.");
         }
-        String needle = query.trim().toLowerCase();
-        for (Employee e : employees) {
-            if (e.getLastName().toLowerCase().contains(needle)) {
-                found.add(e);
+        ArrayList<Employee> sorted = new ArrayList<Employee>(employees);
+        Collections.sort(sorted, comparator);
+        return sorted;
+    }
+
+    public ArrayList<Employee> searchByLastName(String query) {
+        ArrayList<Employee> result = new ArrayList<Employee>();
+        if (query == null || query.isBlank()) {
+            return result;
+        }
+        String lower = query.trim().toLowerCase();
+        for (int i = 0; i < employees.size(); i++) {
+            Employee e = employees.get(i);
+            if (e.getLastName().toLowerCase().contains(lower)) {
+                result.add(e);
             }
         }
-        return found;
+        return result;
     }
 
     public ArrayList<Employee> searchByDepartment(Department department) {
-        ArrayList<Employee> found = new ArrayList<Employee>();
+        ArrayList<Employee> result = new ArrayList<Employee>();
         if (department == null) {
-            return found;
+            return result;
         }
-        for (Employee e : employees) {
+        for (int i = 0; i < employees.size(); i++) {
+            Employee e = employees.get(i);
             if (e.getDepartment() == department) {
-                found.add(e);
+                result.add(e);
             }
         }
-        return found;
+        return result;
     }
 
     public ArrayList<Employee> searchBySalaryRange(double min, double max) {
-        ArrayList<Employee> found = new ArrayList<Employee>();
-        for (Employee e : employees) {
+        ArrayList<Employee> result = new ArrayList<Employee>();
+        for (int i = 0; i < employees.size(); i++) {
+            Employee e = employees.get(i);
             if (e.getSalary() >= min && e.getSalary() <= max) {
-                found.add(e);
+                result.add(e);
             }
         }
-        return found;
+        return result;
     }
 
     public ArrayList<Employee> searchByAgeRange(int min, int max) {
-        ArrayList<Employee> found = new ArrayList<Employee>();
-        for (Employee e : employees) {
+        ArrayList<Employee> result = new ArrayList<Employee>();
+        for (int i = 0; i < employees.size(); i++) {
+            Employee e = employees.get(i);
             if (e.getAge() >= min && e.getAge() <= max) {
-                found.add(e);
+                result.add(e);
             }
         }
-        return found;
+        return result;
     }
 
     public ArrayList<Employee> searchByType(String typeName) {
-        ArrayList<Employee> found = new ArrayList<Employee>();
+        ArrayList<Employee> result = new ArrayList<Employee>();
         if (typeName == null || typeName.isBlank()) {
-            return found;
+            return result;
         }
-        for (Employee e : employees) {
-            if (e.getClass().getSimpleName().equals(typeName)) {
-                found.add(e);
+        String trimmed = typeName.trim();
+        for (int i = 0; i < employees.size(); i++) {
+            Employee e = employees.get(i);
+            if (e.getClass().getSimpleName().equals(trimmed)) {
+                result.add(e);
             }
         }
-        return found;
+        return result;
     }
-	 public Employee searchByUuid(UUID uuid) {
+
+    public Employee searchByUuid(UUID uuid) {
         if (uuid == null) {
             return null;
         }
-        for (Employee e : employees) {
+        for (int i = 0; i < employees.size(); i++) {
+            Employee e = employees.get(i);
             if (uuid.equals(e.getUuid())) {
                 return e;
             }
@@ -326,13 +296,13 @@ public class Company {
 
     public Employee searchByUuid(String rawUuid) {
         if (rawUuid == null || rawUuid.isBlank()) {
-            throw new IllegalArgumentException("UUID не може бути порожнім.");
+            throw new InvalidFieldValueException("UUID не може бути порожнім.");
         }
         try {
             UUID parsed = UUID.fromString(rawUuid.trim());
             return searchByUuid(parsed);
         } catch (IllegalArgumentException ex) {
-            throw new IllegalArgumentException("Некоректний формат UUID: «" + rawUuid.trim() + "».");
+            throw new InvalidFieldValueException("Некоректний формат UUID: «" + rawUuid.trim() + "».");
         }
     }
 
@@ -341,22 +311,5 @@ public class Company {
         return "Company{name='" + name + "', city='" + city + "', foundedYear=" + foundedYear
                 + ", uniquePositions=" + getUniqueEmployeesCount()
                 + ", totalHeadcount=" + getTotalHeadcount() + "}";
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Company company = (Company) o;
-        return foundedYear == company.foundedYear
-                && Objects.equals(name, company.name)
-                && Objects.equals(city, company.city)
-                && Objects.equals(employees, company.employees)
-                && Objects.equals(quantities, company.quantities);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(name, city, foundedYear, employees, quantities);
     }
 }
