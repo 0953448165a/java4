@@ -7,7 +7,7 @@ import java.util.Scanner;
 public class Main {
 
     private static final String PROGRAM_TITLE =
-            "Лабораторна робота №15: лямбда-вирази (Lambda expressions)";
+            "Лабораторна робота №17: модифікація та видалення елементів у колекціях";
     private static final String AUTHOR = "Мудрий Ярослав, група ІН-43-5";
     private static final String DATA_FILE = "input.txt";
 
@@ -37,15 +37,21 @@ public class Main {
                     createObject();
                     break;
                 case 3:
-                    printAll();
+                    modifyObject();
                     break;
                 case 4:
-                    sortMenu();
+                    deleteObject();
                     break;
                 case 5:
-                    STORAGE.saveCompany(company);
+                    printAll();
                     break;
                 case 6:
+                    sortMenu();
+                    break;
+                case 7:
+                    STORAGE.saveCompany(company);
+                    break;
+                case 8:
                     company = STORAGE.loadCompany();
                     System.out.println("Дані перезавантажено: " + company);
                     break;
@@ -55,7 +61,7 @@ public class Main {
                     System.out.println("Роботу завершено.");
                     break;
                 default:
-                    System.out.println("Невірний пункт меню. Оберіть число від 0 до 6.");
+                    System.out.println("Невірний пункт меню. Оберіть число від 0 до 8.");
                     break;
             }
         }
@@ -73,19 +79,301 @@ public class Main {
         System.out.println("\n=== МЕНЮ УПРАВЛІННЯ КОМПАНІЄЮ ===");
         System.out.println("1. Пошук працівників у компанії");
         System.out.println("2. Додати працівника (або збільшити кількість існуючого)");
-        System.out.println("3. Вивести інформацію про компанію та всіх працівників");
-        System.out.println("4. Вивести відсортовану інформацію про всі об'єкти");
-        System.out.println("5. Зберегти дані компанії у " + DATA_FILE);
-        System.out.println("6. Перезавантажити дані компанії з " + DATA_FILE);
+        System.out.println("3. Модифікувати працівника");
+        System.out.println("4. Видалити працівника");
+        System.out.println("5. Вивести інформацію про компанію та всіх працівників");
+        System.out.println("6. Вивести відсортовану інформацію про всі об'єкти");
+        System.out.println("7. Зберегти дані компанії у " + DATA_FILE);
+        System.out.println("8. Перезавантажити дані компанії з " + DATA_FILE);
         System.out.println("0. Зберегти та завершити роботу програми");
+    }
+
+    // ===================== Модифікація об'єктів (update) =====================
+
+    private static void modifyObject() {
+        if (company.isEmpty()) {
+            System.out.println("Колекція порожня. Немає працівників для модифікації.");
+            return;
+        }
+
+        ArrayList<Employee> list = company.getEmployees();
+        System.out.println("\n--- Оберіть працівника для модифікації ---");
+        for (int i = 0; i < list.size(); i++) {
+            Employee emp = list.get(i);
+            System.out.println((i + 1) + ". " + emp.toShortString()
+                    + " | кількість: " + company.getEmployeeQuantity(emp));
+        }
+        System.out.println("0. Скасувати та повернутися в головне меню");
+
+        int selectedIndex = readIntInRange("Номер працівника: ", 0, list.size());
+        if (selectedIndex == 0) {
+            return;
+        }
+
+        Employee existing = list.get(selectedIndex - 1);
+        System.out.println("\nОбраний об'єкт:");
+        printEmployee(selectedIndex, existing, company.getEmployeeQuantity(existing));
+
+        try {
+            Employee updated = buildModifiedEmployee(existing);
+            if (updated == null) {
+                System.out.println("Модифікацію скасовано.");
+                return;
+            }
+            boolean isUpdated = company.update(existing, updated);
+            if (isUpdated) {
+                System.out.println("Дані працівника успішно оновлено.");
+            } else {
+                System.out.println("Не вдалося оновити: працівника не знайдено у колекції.");
+            }
+        } catch (IllegalArgumentException e) {
+            System.out.println("Помилка валідації: " + e.getMessage());
+            System.out.println("Зміни не застосовано.");
+        }
+    }
+
+    private static Employee buildModifiedEmployee(Employee existing) {
+        String firstName = existing.getFirstName();
+        String lastName = existing.getLastName();
+        String position = existing.getPosition();
+        double salary = existing.getSalary();
+        int age = existing.getAge();
+        Department department = existing.getDepartment();
+
+        System.out.println("\nОберіть атрибут для зміни:");
+        System.out.println("1. Ім'я (поточне: " + firstName + ")");
+        System.out.println("2. Прізвище (поточне: " + lastName + ")");
+        System.out.println("3. Посада (поточна: " + position + ")");
+        System.out.println("4. Базова зарплата (поточна: " + salary + ")");
+        System.out.println("5. Вік (поточний: " + age + ")");
+        System.out.println("6. Відділ (поточний: " + department + ")");
+
+        if (existing instanceof Manager) {
+            Manager m = (Manager) existing;
+            System.out.println("7. Щомісячна премія (поточна: " + m.getBonus() + ")");
+            System.out.println("8. Розмір команди (поточний: " + m.getTeamSize() + ")");
+            System.out.println("9. Назва проєкту (поточна: " + m.getProjectName() + ")");
+            System.out.println("0. Скасувати");
+
+            int attr = readIntInRange("Ваш вибір: ", 0, 9);
+            if (attr == 0) return null;
+
+            double bonus = m.getBonus();
+            int vacationDays = m.getVacationDays();
+            int teamSize = m.getTeamSize();
+            String projectName = m.getProjectName();
+
+            switch (attr) {
+                case 1:
+                    firstName = readNonEmpty("Нове ім'я: ");
+                    break;
+                case 2:
+                    lastName = readNonEmpty("Нове прізвище: ");
+                    break;
+                case 3:
+                    position = readNonEmpty("Нова посада: ");
+                    break;
+                case 4:
+                    salary = readDouble("Нова базова зарплата: ");
+                    break;
+                case 5:
+                    age = readInt("Новий вік: ");
+                    break;
+                case 6:
+                    department = readDepartment();
+                    break;
+                case 7:
+                    bonus = readDouble("Нова щомісячна премія: ");
+                    break;
+                case 8:
+                    teamSize = readInt("Новий розмір команди (1-100): ");
+                    break;
+                case 9:
+                    projectName = readNonEmpty("Нова назва проєкту: ");
+                    break;
+                default:
+                    return null;
+            }
+            return new Manager(firstName, lastName, position, salary, age, department,
+                    bonus, vacationDays, teamSize, projectName);
+        } else if (existing instanceof FullTimeEmployee) {
+            FullTimeEmployee f = (FullTimeEmployee) existing;
+            System.out.println("7. Щомісячна премія (поточна: " + f.getBonus() + ")");
+            System.out.println("8. Днів відпустки (поточна кількість: " + f.getVacationDays() + ")");
+            System.out.println("0. Скасувати");
+
+            int attr = readIntInRange("Ваш вибір: ", 0, 8);
+            if (attr == 0) return null;
+
+            double bonus = f.getBonus();
+            int vacationDays = f.getVacationDays();
+
+            switch (attr) {
+                case 1:
+                    firstName = readNonEmpty("Нове ім'я: ");
+                    break;
+                case 2:
+                    lastName = readNonEmpty("Нове прізвище: ");
+                    break;
+                case 3:
+                    position = readNonEmpty("Нова посада: ");
+                    break;
+                case 4:
+                    salary = readDouble("Нова базова зарплата: ");
+                    break;
+                case 5:
+                    age = readInt("Новий вік: ");
+                    break;
+                case 6:
+                    department = readDepartment();
+                    break;
+                case 7:
+                    bonus = readDouble("Нова щомісячна премія: ");
+                    break;
+                case 8:
+                    vacationDays = readInt("Нова кількість днів відпустки (0-60): ");
+                    break;
+                default:
+                    return null;
+            }
+            return new FullTimeEmployee(firstName, lastName, position, salary, age, department,
+                    bonus, vacationDays);
+        } else if (existing instanceof ContractEmployee) {
+            ContractEmployee c = (ContractEmployee) existing;
+            System.out.println("7. Строк контракту, міс. (поточний: " + c.getContractMonths() + ")");
+            System.out.println("8. Агенція (поточна: " + c.getAgency() + ")");
+            System.out.println("0. Скасувати");
+
+            int attr = readIntInRange("Ваш вибір: ", 0, 8);
+            if (attr == 0) return null;
+
+            int contractMonths = c.getContractMonths();
+            String agency = c.getAgency();
+
+            switch (attr) {
+                case 1:
+                    firstName = readNonEmpty("Нове ім'я: ");
+                    break;
+                case 2:
+                    lastName = readNonEmpty("Нове прізвище: ");
+                    break;
+                case 3:
+                    position = readNonEmpty("Нова посада: ");
+                    break;
+                case 4:
+                    salary = readDouble("Нова базова зарплата: ");
+                    break;
+                case 5:
+                    age = readInt("Новий вік: ");
+                    break;
+                case 6:
+                    department = readDepartment();
+                    break;
+                case 7:
+                    contractMonths = readInt("Новий строк контракту, міс. (1-60): ");
+                    break;
+                case 8:
+                    agency = readNonEmpty("Нова агенція: ");
+                    break;
+                default:
+                    return null;
+            }
+            return new ContractEmployee(firstName, lastName, position, salary, age, department,
+                    contractMonths, agency);
+        } else if (existing instanceof Intern) {
+            Intern in = (Intern) existing;
+            System.out.println("7. Університет (поточний: " + in.getUniversity() + ")");
+            System.out.println("8. Тривалість стажування, міс. (поточна: " + in.getInternshipMonths() + ")");
+            System.out.println("9. Ментор (поточний: " + in.getMentorName() + ")");
+            System.out.println("0. Скасувати");
+
+            int attr = readIntInRange("Ваш вибір: ", 0, 9);
+            if (attr == 0) return null;
+
+            String university = in.getUniversity();
+            int internshipMonths = in.getInternshipMonths();
+            String mentorName = in.getMentorName();
+
+            switch (attr) {
+                case 1:
+                    firstName = readNonEmpty("Нове ім'я: ");
+                    break;
+                case 2:
+                    lastName = readNonEmpty("Нове прізвище: ");
+                    break;
+                case 3:
+                    position = readNonEmpty("Нова посада: ");
+                    break;
+                case 4:
+                    salary = readDouble("Нова базова зарплата: ");
+                    break;
+                case 5:
+                    age = readInt("Новий вік: ");
+                    break;
+                case 6:
+                    department = readDepartment();
+                    break;
+                case 7:
+                    university = readNonEmpty("Новий університет: ");
+                    break;
+                case 8:
+                    internshipMonths = readInt("Нова тривалість стажування, міс. (1-12): ");
+                    break;
+                case 9:
+                    mentorName = readNonEmpty("Нове ім'я ментора: ");
+                    break;
+                default:
+                    return null;
+            }
+            return new Intern(firstName, lastName, position, salary, age, department,
+                    university, internshipMonths, mentorName);
+        }
+
+        return null;
+    }
+
+    // ===================== Видалення об'єктів (delete) =====================
+
+    private static void deleteObject() {
+        if (company.isEmpty()) {
+            System.out.println("Колекція порожня. Немає працівників для видалення.");
+            return;
+        }
+
+        ArrayList<Employee> list = company.getEmployees();
+        System.out.println("\n--- Оберіть працівника для видалення ---");
+        for (int i = 0; i < list.size(); i++) {
+            Employee emp = list.get(i);
+            System.out.println((i + 1) + ". " + emp.toShortString()
+                    + " | кількість: " + company.getEmployeeQuantity(emp));
+        }
+        System.out.println("0. Скасувати та повернутися в головне меню");
+
+        int selectedIndex = readIntInRange("Номер працівника: ", 0, list.size());
+        if (selectedIndex == 0) {
+            return;
+        }
+
+        Employee target = list.get(selectedIndex - 1);
+        System.out.println("\nОбрано для видалення:");
+        printEmployee(selectedIndex, target, company.getEmployeeQuantity(target));
+        System.out.println("Підтвердіть видалення: 1 — Так, видалити | 0 — Ні, скасувати");
+        int confirm = readIntInRange("Підтвердження: ", 0, 1);
+        if (confirm == 0) {
+            System.out.println("Видалення скасовано.");
+            return;
+        }
+
+        boolean removed = company.delete(target);
+        if (removed) {
+            System.out.println("Працівника успішно видалено з колекції.");
+        } else {
+            System.out.println("Помилка: працівника не знайдено у колекції.");
+        }
     }
 
     // ===================== Підменю сортування (Lambda expressions) =====================
 
-    /**
-     * Підменю вибору критерію сортування для пункту №4.
-     * Для кожного критерію використовується лямбда-вираз Comparator<Employee>.
-     */
     private static void sortMenu() {
         while (true) {
             System.out.println("\n--- Оберіть критерій сортування ---");
@@ -138,9 +426,6 @@ public class Main {
         }
     }
 
-    /**
-     * Сортує об'єкти компанії за переданим Comparator та виводить результат у консоль.
-     */
     private static void printSortedBy(String criterionTitle, Comparator<Employee> comparator) {
         ArrayList<Employee> sortedEmployees = company.getSortedEmployees(comparator);
         if (sortedEmployees.isEmpty()) {
@@ -159,7 +444,7 @@ public class Main {
 
     // ===================== Підменю пошуку =====================
 
-private static void searchMenu() {
+    private static void searchMenu() {
         while (true) {
             System.out.println("\n--- Пошук працівників у компанії «" + company.getName() + "» ---");
             System.out.println("1. За прізвищем");
@@ -195,21 +480,6 @@ private static void searchMenu() {
                     System.out.println("Невірний пункт. Оберіть число від 0 до 6.");
                     break;
             }
-        }
-    }
-
-    private static void runSearchByUuid() {
-        String rawUuid = readNonEmpty("Введіть UUID працівника: ");
-        try {
-            Employee found = company.searchByUuid(rawUuid);
-            if (found == null) {
-                System.out.println("Об'єкт з UUID «" + rawUuid + "» не знайдено.");
-                return;
-            }
-            System.out.println("\nЗнайдено об'єкт за UUID:");
-            printEmployee(1, found, company.getEmployeeQuantity(found));
-        } catch (IllegalArgumentException e) {
-            System.out.println("Помилка: " + e.getMessage());
         }
     }
 
@@ -251,6 +521,21 @@ private static void searchMenu() {
         String typeName = readTypeName();
         ArrayList<Employee> found = company.searchByType(typeName);
         printSearchResult("тип " + typeName, found);
+    }
+
+    private static void runSearchByUuid() {
+        String rawUuid = readNonEmpty("Введіть UUID працівника: ");
+        try {
+            Employee found = company.searchByUuid(rawUuid);
+            if (found == null) {
+                System.out.println("Об'єкт з UUID «" + rawUuid + "» не знайдено.");
+                return;
+            }
+            System.out.println("\nЗнайдено об'єкт за UUID:");
+            printEmployee(1, found, company.getEmployeeQuantity(found));
+        } catch (IllegalArgumentException e) {
+            System.out.println("Помилка: " + e.getMessage());
+        }
     }
 
     private static void printSearchResult(String criterion, ArrayList<Employee> found) {
