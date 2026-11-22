@@ -1,3 +1,5 @@
+import java.text.Collator;
+import java.util.Locale;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Scanner;
@@ -37,9 +39,23 @@ public class Main {
                 case 3:
                     printAll();
                     break;
-                case 4:
-                    sortMenu();
-                    break;
+case 4:
+                    final Collator uaCollator = Collator.getInstance(Locale.forLanguageTag("uk-UA"));
+                    uaCollator.setStrength(Collator.PRIMARY);
+                    Comparator<Employee> byDepartmentAndName = new Comparator<Employee>() {
+                        @Override
+                        public int compare(Employee o1, Employee o2) {
+                            int cmp = uaCollator.compare(
+                                    o1.getDepartment().getTitle(),
+                                    o2.getDepartment().getTitle());
+                            if (cmp != 0) {
+                                return cmp;
+                            }
+                            return o1.compareTo(o2);
+                        }
+                    };
+                    printSortedBy("відділом та ПІБ (за алфавітом)", byDepartmentAndName);
+                    return;
                 case 5:
                     STORAGE.saveCompany(company);
                     break;
