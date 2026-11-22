@@ -1,10 +1,11 @@
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Scanner;
 
 public class Main {
 
     private static final String PROGRAM_TITLE =
-            "Практична робота №13: абстрактні класи, інтерфейси та Comparable";
+            "Практична робота №14: внутрішні класи та інтерфейс Comparator";
     private static final String AUTHOR = "Мудрий Ярослав, група ІН-43-5";
     private static final String DATA_FILE = "input.txt";
 
@@ -27,21 +28,33 @@ public class Main {
             printMenu();
             int choice = readInt("Ваш вибір: ");
             switch (choice) {
-                case 1 -> searchMenu();
-                case 2 -> createObject();
-                case 3 -> printAll();
-                case 4 -> printSorted();
-                case 5 -> STORAGE.saveCompany(company);
-                case 6 -> {
+                case 1:
+                    searchMenu();
+                    break;
+                case 2:
+                    createObject();
+                    break;
+                case 3:
+                    printAll();
+                    break;
+                case 4:
+                    sortMenu();
+                    break;
+                case 5:
+                    STORAGE.saveCompany(company);
+                    break;
+                case 6:
                     company = STORAGE.loadCompany();
                     System.out.println("Дані перезавантажено: " + company);
-                }
-                case 0 -> {
+                    break;
+                case 0:
                     STORAGE.saveCompany(company);
                     running = false;
                     System.out.println("Роботу завершено.");
-                }
-                default -> System.out.println("Невірний пункт меню. Оберіть число від 0 до 6.");
+                    break;
+                default:
+                    System.out.println("Невірний пункт меню. Оберіть число від 0 до 6.");
+                    break;
             }
         }
         SCANNER.close();
@@ -65,6 +78,104 @@ public class Main {
         System.out.println("0. Зберегти та завершити роботу програми");
     }
 
+    // ===================== Підменю сортування (Comparator) =====================
+
+    /**
+     * Підменю вибору критерію сортування для пункту №4.
+     * Для кожного критерію використовується анонімний внутрішній клас Comparator<Employee>.
+     */
+    private static void sortMenu() {
+        while (true) {
+            System.out.println("\n--- Оберіть критерій сортування ---");
+            System.out.println("1. Сортувати за базовою зарплатою (за зростанням)");
+            System.out.println("2. Сортувати за місячною виплатою (за спаданням)");
+            System.out.println("3. Сортувати за віком (за зростанням)");
+            System.out.println("4. Сортувати за відділом та ПІБ (за алфавітом)");
+            System.out.println("0. Повернутися в головне меню");
+            int choice = readInt("Критерій сортування: ");
+
+            switch (choice) {
+                case 0:
+                    return;
+                case 1:
+                    Comparator<Employee> bySalaryAsc = new Comparator<Employee>() {
+                        @Override
+                        public int compare(Employee o1, Employee o2) {
+                            int cmp = Double.compare(o1.getSalary(), o2.getSalary());
+                            if (cmp != 0) {
+                                return cmp;
+                            }
+                            return o1.compareTo(o2);
+                        }
+                    };
+                    printSortedBy("базовою зарплатою (за зростанням)", bySalaryAsc);
+                    return;
+                case 2:
+                    Comparator<Employee> byMonthlyPayDesc = new Comparator<Employee>() {
+                        @Override
+                        public int compare(Employee o1, Employee o2) {
+                            int cmp = Double.compare(o2.calculateMonthlyPay(), o1.calculateMonthlyPay());
+                            if (cmp != 0) {
+                                return cmp;
+                            }
+                            return o1.compareTo(o2);
+                        }
+                    };
+                    printSortedBy("місячною виплатою (за спаданням)", byMonthlyPayDesc);
+                    return;
+                case 3:
+                    Comparator<Employee> byAgeAsc = new Comparator<Employee>() {
+                        @Override
+                        public int compare(Employee o1, Employee o2) {
+                            int cmp = Integer.compare(o1.getAge(), o2.getAge());
+                            if (cmp != 0) {
+                                return cmp;
+                            }
+                            return o1.compareTo(o2);
+                        }
+                    };
+                    printSortedBy("віком (за зростанням)", byAgeAsc);
+                    return;
+                case 4:
+                    Comparator<Employee> byDepartmentAndName = new Comparator<Employee>() {
+                        @Override
+                        public int compare(Employee o1, Employee o2) {
+                            int cmp = o1.getDepartment().getTitle().compareToIgnoreCase(
+                                    o2.getDepartment().getTitle());
+                            if (cmp != 0) {
+                                return cmp;
+                            }
+                            return o1.compareTo(o2);
+                        }
+                    };
+                    printSortedBy("відділом та ПІБ (за алфавітом)", byDepartmentAndName);
+                    return;
+                default:
+                    System.out.println("Невірний пункт. Оберіть число від 0 до 4.");
+                    break;
+            }
+        }
+    }
+
+    /**
+     * Сортує об'єкти компанії за переданим Comparator та виводить результат у консоль.
+     */
+    private static void printSortedBy(String criterionTitle, Comparator<Employee> comparator) {
+        ArrayList<Employee> sortedEmployees = company.getSortedEmployees(comparator);
+        if (sortedEmployees.isEmpty()) {
+            System.out.println("Список об'єктів порожній.");
+            return;
+        }
+
+        System.out.println("\n=== Відсортований список об'єктів (за " + criterionTitle + ") ===");
+        for (int i = 0; i < sortedEmployees.size(); i++) {
+            Employee emp = sortedEmployees.get(i);
+            printEmployee(i + 1, emp, company.getEmployeeQuantity(emp));
+        }
+        System.out.printf("Загальний місячний фонд оплати праці компанії: %.2f%n",
+                company.calculateTotalMonthlyPayroll());
+    }
+
     // ===================== Підменю пошуку =====================
 
     private static void searchMenu() {
@@ -78,15 +189,26 @@ public class Main {
             System.out.println("0. Назад до головного меню");
             int choice = readInt("Критерій: ");
             switch (choice) {
-                case 0 -> {
+                case 0:
                     return;
-                }
-                case 1 -> runSearchByLastName();
-                case 2 -> runSearchByDepartment();
-                case 3 -> runSearchBySalaryRange();
-                case 4 -> runSearchByAgeRange();
-                case 5 -> runSearchByType();
-                default -> System.out.println("Невірний пункт. Оберіть число від 0 до 5.");
+                case 1:
+                    runSearchByLastName();
+                    break;
+                case 2:
+                    runSearchByDepartment();
+                    break;
+                case 3:
+                    runSearchBySalaryRange();
+                    break;
+                case 4:
+                    runSearchByAgeRange();
+                    break;
+                case 5:
+                    runSearchByType();
+                    break;
+                default:
+                    System.out.println("Невірний пункт. Оберіть число від 0 до 5.");
+                    break;
             }
         }
     }
@@ -156,26 +278,23 @@ public class Main {
             System.out.println("0. Назад до головного меню");
             int choice = readInt("Тип: ");
             switch (choice) {
-                case 0 -> {
+                case 0:
                     return;
-                }
-                case 1 -> {
+                case 1:
                     createFullTimeEmployee();
                     return;
-                }
-                case 2 -> {
+                case 2:
                     createContractEmployee();
                     return;
-                }
-                case 3 -> {
+                case 3:
                     createManager();
                     return;
-                }
-                case 4 -> {
+                case 4:
                     createIntern();
                     return;
-                }
-                default -> System.out.println("Невірний пункт. Оберіть число від 0 до 4.");
+                default:
+                    System.out.println("Невірний пункт. Оберіть число від 0 до 4.");
+                    break;
             }
         }
     }
@@ -282,8 +401,9 @@ public class Main {
     private static void printAll() {
         System.out.println("\n=== Інформація про компанію ===");
         System.out.println("Назва компанії: " + company.getName());
+        System.out.println("Місто: " + company.getCity() + ", рік заснування: " + company.getFoundedYear());
         System.out.println("Унікальних позицій у штаті: " + company.getUniqueEmployeesCount());
-        System.out.println("Загальна чисельність працівників: " + company.getTotalEmployeesCount());
+        System.out.println("Загальна чисельність працівників: " + company.getTotalHeadcount());
 
         if (company.isEmpty()) {
             System.out.println("Список працівників порожній.");
@@ -301,26 +421,6 @@ public class Main {
                 company.calculateTotalMonthlyPayroll());
     }
 
-    /**
-     * Пункт меню №4: отримує список усіх об'єктів, сортує їх через Comparable
-     * та виводить відсортований результат у консоль.
-     */
-    private static void printSorted() {
-        ArrayList<Employee> sortedEmployees = company.getSortedEmployees();
-        if (sortedEmployees.isEmpty()) {
-            System.out.println("Список об'єктів порожній.");
-            return;
-        }
-
-        System.out.println("\n=== Відсортований список об'єктів (за ПІБ, Comparable) ===");
-        for (int i = 0; i < sortedEmployees.size(); i++) {
-            Employee emp = sortedEmployees.get(i);
-            printEmployee(i + 1, emp, company.getEmployeeQuantity(emp));
-        }
-        System.out.printf("Загальний місячний фонд оплати праці компанії: %.2f%n",
-                company.calculateTotalMonthlyPayroll());
-    }
-
     private static void printEmployee(int number, Employee e, int quantity) {
         double unitPay = e.calculateMonthlyPay();
         double groupPay = unitPay * quantity;
@@ -329,16 +429,20 @@ public class Main {
         System.out.printf("   виплата на 1 працівника: %.2f, разом за позицією (%d шт.): %.2f%n",
                 unitPay, quantity, groupPay);
 
-        if (e instanceof Manager m) {
+        if (e instanceof Manager) {
+            Manager m = (Manager) e;
             System.out.printf("   команда: %d, проєкт: %s, надбавка за керування: %.2f%n",
                     m.getTeamSize(), m.getProjectName(), m.getManagementAllowance());
-        } else if (e instanceof FullTimeEmployee f) {
+        } else if (e instanceof FullTimeEmployee) {
+            FullTimeEmployee f = (FullTimeEmployee) e;
             System.out.printf("   премія: %.2f, днів відпустки: %d%n",
                     f.getBonus(), f.getVacationDays());
-        } else if (e instanceof ContractEmployee c) {
+        } else if (e instanceof ContractEmployee) {
+            ContractEmployee c = (ContractEmployee) e;
             System.out.printf("   контракт: %d міс., агенція: %s, вартість контракту: %.2f%n",
                     c.getContractMonths(), c.getAgency(), c.getTotalContractCost());
-        } else if (e instanceof Intern in) {
+        } else if (e instanceof Intern) {
+            Intern in = (Intern) e;
             System.out.printf("   університет: %s, ментор: %s, виплата за стажування: %.2f%n",
                     in.getUniversity(), in.getMentorName(), in.getTotalStipend());
         }
