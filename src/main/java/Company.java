@@ -1,5 +1,6 @@
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class Company {
@@ -83,6 +84,19 @@ public class Company {
     public ArrayList<Employee> getSortedEmployees() {
         ArrayList<Employee> sorted = new ArrayList<Employee>(employees);
         Collections.sort(sorted);
+        return sorted;
+    }
+
+    /**
+     * Повертає новий список усіх унікальних працівників компанії,
+     * відсортований за переданим компаратором (Comparator).
+     */
+    public ArrayList<Employee> getSortedEmployees(Comparator<Employee> comparator) {
+        if (comparator == null) {
+            throw new IllegalArgumentException("Компаратор не може бути null.");
+        }
+        ArrayList<Employee> sorted = new ArrayList<Employee>(employees);
+        Collections.sort(sorted, comparator);
         return sorted;
     }
 
