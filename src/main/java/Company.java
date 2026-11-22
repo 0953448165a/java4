@@ -177,6 +177,74 @@ public class Company {
         return true;
     }
 
+	 /**
+     * Знаходить об'єкт existingObject у колекції компанії та оновлює його на newObject.
+     *
+     * @param existingObject наявний об'єкт у колекції
+     * @param newObject      оновлений об'єкт працівника
+     * @return true, якщо об'єкт знайдено та оновлено; false, якщо об'єкт не знайдено
+     */
+    public boolean update(Employee existingObject, Employee newObject) {
+        if (newObject == null) {
+            throw new IllegalArgumentException("Новий об'єкт працівника не може бути null.");
+        }
+        if (existingObject == null) {
+            return false;
+        }
+
+        int index = employees.indexOf(existingObject);
+        if (index < 0 && existingObject.getUuid() != null) {
+            for (int i = 0; i < employees.size(); i++) {
+                if (existingObject.getUuid().equals(employees.get(i).getUuid())) {
+                    index = i;
+                    break;
+                }
+            }
+        }
+        if (index < 0) {
+            return false;
+        }
+
+        if (existingObject.getUuid() != null) {
+            newObject.setUuid(existingObject.getUuid());
+        }
+
+        int duplicateIndex = employees.indexOf(newObject);
+        if (duplicateIndex >= 0 && duplicateIndex != index) {
+            int mergedQuantity = quantities.get(duplicateIndex) + quantities.get(index);
+            quantities.set(duplicateIndex, mergedQuantity);
+            employees.remove(index);
+            quantities.remove(index);
+            return true;
+        }
+
+        employees.set(index, newObject);
+        return true;
+    }
+
+    public boolean delete(Employee existingObject) {
+        if (existingObject == null) {
+            return false;
+        }
+
+        int index = employees.indexOf(existingObject);
+        if (index < 0 && existingObject.getUuid() != null) {
+            for (int i = 0; i < employees.size(); i++) {
+                if (existingObject.getUuid().equals(employees.get(i).getUuid())) {
+                    index = i;
+                    break;
+                }
+            }
+        }
+        if (index < 0) {
+            return false;
+        }
+
+        employees.remove(index);
+        quantities.remove(index);
+        return true;
+    }
+
     public double calculateTotalMonthlyPayroll() {
         double total = 0.0;
         for (int i = 0; i < employees.size(); i++) {
