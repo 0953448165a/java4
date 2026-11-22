@@ -1,5 +1,4 @@
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.function.Executable;
 
 import java.text.Collator;
 import java.util.ArrayList;
@@ -11,18 +10,12 @@ import static org.junit.jupiter.api.Assertions.*;
 class ComparatorSortingTest {
 
     @Test
-    void shouldSortBySalaryAscendingUsingAnonymousComparator() {
+    void shouldSortBySalaryAscendingUsingLambda() {
         Company company = new SampleData().company();
 
-        Comparator<Employee> bySalaryAsc = new Comparator<Employee>() {
-            @Override
-            public int compare(Employee o1, Employee o2) {
-                int cmp = Double.compare(o1.getSalary(), o2.getSalary());
-                if (cmp != 0) {
-                    return cmp;
-                }
-                return o1.compareTo(o2);
-            }
+        Comparator<Employee> bySalaryAsc = (o1, o2) -> {
+            int cmp = Double.compare(o1.getSalary(), o2.getSalary());
+            return cmp != 0 ? cmp : o1.compareTo(o2);
         };
 
         ArrayList<Employee> sorted = company.getSortedEmployees(bySalaryAsc);
@@ -34,18 +27,12 @@ class ComparatorSortingTest {
     }
 
     @Test
-    void shouldSortByMonthlyPayDescendingUsingAnonymousComparator() {
+    void shouldSortByMonthlyPayDescendingUsingLambda() {
         Company company = new SampleData().company();
 
-        Comparator<Employee> byMonthlyPayDesc = new Comparator<Employee>() {
-            @Override
-            public int compare(Employee o1, Employee o2) {
-                int cmp = Double.compare(o2.calculateMonthlyPay(), o1.calculateMonthlyPay());
-                if (cmp != 0) {
-                    return cmp;
-                }
-                return o1.compareTo(o2);
-            }
+        Comparator<Employee> byMonthlyPayDesc = (o1, o2) -> {
+            int cmp = Double.compare(o2.calculateMonthlyPay(), o1.calculateMonthlyPay());
+            return cmp != 0 ? cmp : o1.compareTo(o2);
         };
 
         ArrayList<Employee> sorted = company.getSortedEmployees(byMonthlyPayDesc);
@@ -57,18 +44,12 @@ class ComparatorSortingTest {
     }
 
     @Test
-    void shouldSortByAgeAscendingUsingAnonymousComparator() {
+    void shouldSortByAgeAscendingUsingLambda() {
         Company company = new SampleData().company();
 
-        Comparator<Employee> byAgeAsc = new Comparator<Employee>() {
-            @Override
-            public int compare(Employee o1, Employee o2) {
-                int cmp = Integer.compare(o1.getAge(), o2.getAge());
-                if (cmp != 0) {
-                    return cmp;
-                }
-                return o1.compareTo(o2);
-            }
+        Comparator<Employee> byAgeAsc = (o1, o2) -> {
+            int cmp = Integer.compare(o1.getAge(), o2.getAge());
+            return cmp != 0 ? cmp : o1.compareTo(o2);
         };
 
         ArrayList<Employee> sorted = company.getSortedEmployees(byAgeAsc);
@@ -79,23 +60,17 @@ class ComparatorSortingTest {
     }
 
     @Test
-    void shouldSortByDepartmentAndNameUsingAnonymousComparator() {
+    void shouldSortByDepartmentAndNameUsingLambda() {
         Company company = new SampleData().company();
 
         final Collator uaCollator = Collator.getInstance(Locale.forLanguageTag("uk-UA"));
         uaCollator.setStrength(Collator.PRIMARY);
 
-        Comparator<Employee> byDepartmentAndName = new Comparator<Employee>() {
-            @Override
-            public int compare(Employee o1, Employee o2) {
-                int cmp = uaCollator.compare(
-                        o1.getDepartment().getTitle(),
-                        o2.getDepartment().getTitle());
-                if (cmp != 0) {
-                    return cmp;
-                }
-                return o1.compareTo(o2);
-            }
+        Comparator<Employee> byDepartmentAndName = (o1, o2) -> {
+            int cmp = uaCollator.compare(
+                    o1.getDepartment().getTitle(),
+                    o2.getDepartment().getTitle());
+            return cmp != 0 ? cmp : o1.compareTo(o2);
         };
 
         ArrayList<Employee> sorted = company.getSortedEmployees(byDepartmentAndName);
@@ -110,13 +85,29 @@ class ComparatorSortingTest {
     }
 
     @Test
-    void shouldHandleEmptySingleElementAndNotModifyOriginalOrder() {
-        Comparator<Employee> byAge = new Comparator<Employee>() {
-            @Override
-            public int compare(Employee o1, Employee o2) {
-                return Integer.compare(o1.getAge(), o2.getAge());
-            }
+    void shouldResolveEqualFieldValuesStablyUsingLambda() {
+        Company company = new Company("EqualSalaryCorp");
+        Employee secondByName = new FullTimeEmployee("Ярослав", "Мудрий", "Розробник",
+                30000, 25, Department.IT, 5000, 24);
+        Employee firstByName = new FullTimeEmployee("Олег", "Бойко", "Розробник",
+                30000, 28, Department.IT, 4000, 24);
+
+        company.addNewEmployee(secondByName, 1);
+        company.addNewEmployee(firstByName, 1);
+
+        Comparator<Employee> bySalaryAsc = (o1, o2) -> {
+            int cmp = Double.compare(o1.getSalary(), o2.getSalary());
+            return cmp != 0 ? cmp : o1.compareTo(o2);
         };
+
+        ArrayList<Employee> sorted = company.getSortedEmployees(bySalaryAsc);
+        assertEquals("Бойко", sorted.get(0).getLastName());
+        assertEquals("Мудрий", sorted.get(1).getLastName());
+    }
+
+    @Test
+    void shouldHandleEmptySingleElementAndNotModifyOriginalOrder() {
+        Comparator<Employee> byAge = (o1, o2) -> Integer.compare(o1.getAge(), o2.getAge());
 
         Company empty = new Company("EmptyCorp");
         assertTrue(empty.getSortedEmployees(byAge).isEmpty());
@@ -136,12 +127,7 @@ class ComparatorSortingTest {
 
     @Test
     void shouldRejectNullComparator() {
-        final Company company = new SampleData().company();
-        assertThrows(IllegalArgumentException.class, new Executable() {
-            @Override
-            public void execute() {
-                company.getSortedEmployees(null);
-            }
-        });
+        Company company = new SampleData().company();
+        assertThrows(IllegalArgumentException.class, () -> company.getSortedEmployees(null));
     }
 }
