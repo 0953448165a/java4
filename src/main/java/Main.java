@@ -159,7 +159,7 @@ public class Main {
 
     // ===================== Підменю пошуку =====================
 
-    private static void searchMenu() {
+private static void searchMenu() {
         while (true) {
             System.out.println("\n--- Пошук працівників у компанії «" + company.getName() + "» ---");
             System.out.println("1. За прізвищем");
@@ -167,6 +167,7 @@ public class Main {
             System.out.println("3. За діапазоном зарплати");
             System.out.println("4. За діапазоном віку");
             System.out.println("5. За типом працівника");
+            System.out.println("6. За UUID");
             System.out.println("0. Назад до головного меню");
             int choice = readInt("Критерій: ");
             switch (choice) {
@@ -187,10 +188,28 @@ public class Main {
                 case 5:
                     runSearchByType();
                     break;
+                case 6:
+                    runSearchByUuid();
+                    break;
                 default:
-                    System.out.println("Невірний пункт. Оберіть число від 0 до 5.");
+                    System.out.println("Невірний пункт. Оберіть число від 0 до 6.");
                     break;
             }
+        }
+    }
+
+    private static void runSearchByUuid() {
+        String rawUuid = readNonEmpty("Введіть UUID працівника: ");
+        try {
+            Employee found = company.searchByUuid(rawUuid);
+            if (found == null) {
+                System.out.println("Об'єкт з UUID «" + rawUuid + "» не знайдено.");
+                return;
+            }
+            System.out.println("\nЗнайдено об'єкт за UUID:");
+            printEmployee(1, found, company.getEmployeeQuantity(found));
+        } catch (IllegalArgumentException e) {
+            System.out.println("Помилка: " + e.getMessage());
         }
     }
 

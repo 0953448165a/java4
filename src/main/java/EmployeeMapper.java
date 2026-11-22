@@ -1,5 +1,6 @@
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.UUID;
 
 public class EmployeeMapper {
 
@@ -7,6 +8,7 @@ public class EmployeeMapper {
     public LinkedHashMap<String, Object> toFields(Employee e) {
         LinkedHashMap<String, Object> fields = new LinkedHashMap<String, Object>();
         fields.put("type", e.getClass().getSimpleName());
+        fields.put("uuid", e.getUuid().toString());
         fields.put("firstName", e.getFirstName());
         fields.put("lastName", e.getLastName());
         fields.put("position", e.getPosition());
@@ -14,7 +16,6 @@ public class EmployeeMapper {
         fields.put("age", e.getAge());
         fields.put("department", e.getDepartment().name());
 
-        // Manager перевіряється раніше за FullTimeEmployee, бо є його нащадком
         if (e instanceof Manager) {
             Manager m = (Manager) e;
             fields.put("bonus", m.getBonus());
@@ -39,8 +40,8 @@ public class EmployeeMapper {
     }
 
     /**
-     * Створює об'єкт конкретного підкласу за полем "type".
-     * Базовий клас Employee є абстрактним і не може створюватися напряму.
+     * Створює об'єкт потрібного класу за полем "type".
+     * Якщо у полях присутній "uuid", відновлює його; інакше залишає згенерований автоматично.
      */
     public Employee fromFields(Map<String, String> f) {
         String type = text(f, "type");
@@ -51,21 +52,33 @@ public class EmployeeMapper {
         int age = integer(f, "age");
         Department department = department(f, "department");
 
+        Employee employee;
         if (type.equals("FullTimeEmployee")) {
-            return new FullTimeEmployee(firstName, lastName, position, salary, age, department,
+            employee = new FullTimeEmployee(firstName, lastName, position, salary, age, department,
                     decimal(f, "bonus"), integer(f, "vacationDays"));
         } else if (type.equals("ContractEmployee")) {
-            return new ContractEmployee(firstName, lastName, position, salary, age, department,
+            employee = new ContractEmployee(firstName, lastName, position, salary, age, department,
                     integer(f, "contractMonths"), text(f, "agency"));
         } else if (type.equals("Manager")) {
-            return new Manager(firstName, lastName, position, salary, age, department,
+            employee = new Manager(firstName, lastName, position, salary, age, department,
                     decimal(f, "bonus"), integer(f, "vacationDays"),
                     integer(f, "teamSize"), text(f, "projectName"));
         } else if (type.equals("Intern")) {
-            return new Intern(firstName, lastName, position, salary, age, department,
+            employee = new Intern(firstName, lastName, position, salary, age, department,
                     text(f, "university"), integer(f, "internshipMonths"), text(f, "mentorName"));
+        } else {
+            throw new IllegalArgumentException("невідомий тип об'єкта: " + type);
         }
-        throw new IllegalArgumentException("абстрактний або невідомий тип об'єкта: " + type);
+
+        String rawUuid = f.get("uuid");
+        if (rawUuid != null && !rawUuid.trim().isEmpty()) {
+            try {
+                employee.setUuid(UUID.fromString(rawUuid.trim()));
+            } catch (IllegalArgumentException ex) {
+                throw new IllegalArgumentException("поле «uuid» має некоректний формат: «" + rawUuid.trim() + "»");
+            }
+        }
+        return employee;
     }
 
     private String text(Map<String, String> f, String key) {

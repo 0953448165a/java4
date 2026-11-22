@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.UUID;
 
 public class Company {
 
@@ -242,6 +243,29 @@ public class Company {
             }
         }
         return found;
+    }
+	 public Employee searchByUuid(UUID uuid) {
+        if (uuid == null) {
+            return null;
+        }
+        for (Employee e : employees) {
+            if (uuid.equals(e.getUuid())) {
+                return e;
+            }
+        }
+        return null;
+    }
+
+    public Employee searchByUuid(String rawUuid) {
+        if (rawUuid == null || rawUuid.isBlank()) {
+            throw new IllegalArgumentException("UUID не може бути порожнім.");
+        }
+        try {
+            UUID parsed = UUID.fromString(rawUuid.trim());
+            return searchByUuid(parsed);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Некоректний формат UUID: «" + rawUuid.trim() + "».");
+        }
     }
 
     @Override

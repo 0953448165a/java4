@@ -1,10 +1,12 @@
 import java.util.Objects;
+import java.util.UUID;
 
-public abstract class Employee implements Comparable<Employee> {
+public abstract class Employee implements Comparable<Employee>, Identifiable {
 
     public static final int MIN_AGE = 18;
     public static final int MAX_AGE = 70;
 
+    private UUID uuid;
     private String firstName;
     private String lastName;
     private String position;
@@ -14,6 +16,7 @@ public abstract class Employee implements Comparable<Employee> {
 
     public Employee(String firstName, String lastName, String position,
                     double salary, int age, Department department) {
+        this.uuid = UUID.randomUUID();
         setFirstName(firstName);
         setLastName(lastName);
         setPosition(position);
@@ -22,11 +25,38 @@ public abstract class Employee implements Comparable<Employee> {
         setDepartment(department);
     }
 
+    public Employee(Employee other) {
+        this(requireNotNull(other).firstName, other.lastName, other.position,
+                other.salary, other.age, other.department);
+    }
+
+    private static Employee requireNotNull(Employee other) {
+        if (other == null) {
+            throw new IllegalArgumentException("Працівник для копіювання не може бути null.");
+        }
+        return other;
+    }
+
     private static String requireNotBlank(String value, String fieldName) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(fieldName + " не може бути порожнім.");
         }
         return value.trim();
+    }
+
+    @Override
+    public UUID getUuid() {
+        return uuid;
+    }
+
+    /**
+     * Використовується при відновленні збереженого об'єкта зі сховища (TextStorage / JsonStorage).
+     */
+    void setUuid(UUID uuid) {
+        if (uuid == null) {
+            throw new IllegalArgumentException("UUID не може бути null.");
+        }
+        this.uuid = uuid;
     }
 
     public String getFirstName() {
@@ -93,10 +123,29 @@ public abstract class Employee implements Comparable<Employee> {
         return salary;
     }
 
+    protected String baseFieldsToString() {
+        return "uuid=" + uuid +
+                ", firstName='" + firstName +
+                "', lastName='" + lastName +
+                "', position='" + position +
+                "', salary=" + salary +
+                ", age=" + age +
+                ", department=" + department;
+    }
+
     /**
-     * Порівнює працівників за ПІБ (спочатку за прізвищем, потім за ім'ям)
-     * з однозначним детермінованим розв'язанням збігів за іншими базовими полями.
+     * Коротке текстове подання об'єкта для списків: тип, ПІБ, посада та UUID.
      */
+    public String toShortString() {
+        return getClass().getSimpleName() + ": " + firstName + " " + lastName
+                + " (" + position + ") | UUID: " + uuid;
+    }
+
+    @Override
+    public String toString() {
+        return "Employee{" + baseFieldsToString() + "}";
+    }
+
     @Override
     public int compareTo(Employee other) {
         if (other == null) {
@@ -128,20 +177,6 @@ public abstract class Employee implements Comparable<Employee> {
         if (cmp != 0) return cmp;
 
         return this.getClass().getSimpleName().compareTo(other.getClass().getSimpleName());
-    }
-
-    protected String baseFieldsToString() {
-        return "firstName='" + firstName +
-                "', lastName='" + lastName +
-                "', position='" + position +
-                "', salary=" + salary +
-                ", age=" + age +
-                ", department=" + department;
-    }
-
-    @Override
-    public String toString() {
-        return "Employee{" + baseFieldsToString() + "}";
     }
 
     @Override
