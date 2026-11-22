@@ -7,7 +7,7 @@ import java.util.Scanner;
 public class Main {
 
     private static final String PROGRAM_TITLE =
-            "Лабораторна робота №17: модифікація та видалення елементів у колекціях";
+            "Лабораторна робота №18: власні винятки (Custom exceptions)";
     private static final String AUTHOR = "Мудрий Ярослав, група ІН-43-5";
     private static final String DATA_FILE = "input.txt";
 
@@ -120,15 +120,14 @@ public class Main {
                 System.out.println("Модифікацію скасовано.");
                 return;
             }
-            boolean isUpdated = company.update(existing, updated);
-            if (isUpdated) {
-                System.out.println("Дані працівника успішно оновлено.");
-            } else {
-                System.out.println("Не вдалося оновити: працівника не знайдено у колекції.");
-            }
-        } catch (IllegalArgumentException e) {
-            System.out.println("Помилка валідації: " + e.getMessage());
-            System.out.println("Зміни не застосовано.");
+            company.update(existing, updated);
+            System.out.println("Дані працівника успішно оновлено.");
+        } catch (InvalidFieldValueException e) {
+            System.out.println("Помилка некоректного значення поля: " + e.getMessage());
+            System.out.println("Зміни не застосовано. Повернення до головного меню.");
+        } catch (ObjectNotFoundException e) {
+            System.out.println("Помилка пошуку об'єкта: " + e.getMessage());
+            System.out.println("Повернення до головного меню.");
         }
     }
 
@@ -364,11 +363,12 @@ public class Main {
             return;
         }
 
-        boolean removed = company.delete(target);
-        if (removed) {
+        try {
+            company.delete(target);
             System.out.println("Працівника успішно видалено з колекції.");
-        } else {
-            System.out.println("Помилка: працівника не знайдено у колекції.");
+        } catch (ObjectNotFoundException e) {
+            System.out.println("Помилка видалення: " + e.getMessage());
+            System.out.println("Повернення до головного меню.");
         }
     }
 
@@ -427,19 +427,23 @@ public class Main {
     }
 
     private static void printSortedBy(String criterionTitle, Comparator<Employee> comparator) {
-        ArrayList<Employee> sortedEmployees = company.getSortedEmployees(comparator);
-        if (sortedEmployees.isEmpty()) {
-            System.out.println("Список об'єктів порожній.");
-            return;
-        }
+        try {
+            ArrayList<Employee> sortedEmployees = company.getSortedEmployees(comparator);
+            if (sortedEmployees.isEmpty()) {
+                System.out.println("Список об'єктів порожній.");
+                return;
+            }
 
-        System.out.println("\n=== Відсортований список об'єктів (за " + criterionTitle + ") ===");
-        for (int i = 0; i < sortedEmployees.size(); i++) {
-            Employee emp = sortedEmployees.get(i);
-            printEmployee(i + 1, emp, company.getEmployeeQuantity(emp));
+            System.out.println("\n=== Відсортований список об'єктів (за " + criterionTitle + ") ===");
+            for (int i = 0; i < sortedEmployees.size(); i++) {
+                Employee emp = sortedEmployees.get(i);
+                printEmployee(i + 1, emp, company.getEmployeeQuantity(emp));
+            }
+            System.out.printf("Загальний місячний фонд оплати праці компанії: %.2f%n",
+                    company.calculateTotalMonthlyPayroll());
+        } catch (InvalidFieldValueException e) {
+            System.out.println("Помилка сортування: " + e.getMessage());
         }
-        System.out.printf("Загальний місячний фонд оплати праці компанії: %.2f%n",
-                company.calculateTotalMonthlyPayroll());
     }
 
     // ===================== Підменю пошуку =====================
@@ -533,8 +537,8 @@ public class Main {
             }
             System.out.println("\nЗнайдено об'єкт за UUID:");
             printEmployee(1, found, company.getEmployeeQuantity(found));
-        } catch (IllegalArgumentException e) {
-            System.out.println("Помилка: " + e.getMessage());
+        } catch (InvalidFieldValueException e) {
+            System.out.println("Помилка формату UUID: " + e.getMessage());
         }
     }
 
@@ -620,9 +624,12 @@ public class Main {
             Employee employee = new FullTimeEmployee(d.firstName(), d.lastName(), d.position(),
                     d.salary(), d.age(), d.department(), bonus, vacationDays);
             addToCompany(employee, quantity, "Штатного працівника додано до компанії.");
-        } catch (IllegalArgumentException e) {
-            System.out.println("Помилка: " + e.getMessage());
-            System.out.println("Об'єкт не створено.");
+        } catch (InvalidFieldValueException e) {
+            System.out.println("Помилка некоректного значення: " + e.getMessage());
+            System.out.println("Об'єкт не створено. Повернення до головного меню.");
+        } catch (DuplicateObjectException e) {
+            System.out.println("Помилка дублювання: " + e.getMessage());
+            System.out.println("Повернення до головного меню.");
         }
     }
 
@@ -637,9 +644,12 @@ public class Main {
             Employee employee = new ContractEmployee(d.firstName(), d.lastName(), d.position(),
                     d.salary(), d.age(), d.department(), contractMonths, agency);
             addToCompany(employee, quantity, "Працівника за контрактом додано до компанії.");
-        } catch (IllegalArgumentException e) {
-            System.out.println("Помилка: " + e.getMessage());
-            System.out.println("Об'єкт не створено.");
+        } catch (InvalidFieldValueException e) {
+            System.out.println("Помилка некоректного значення: " + e.getMessage());
+            System.out.println("Об'єкт не створено. Повернення до головного меню.");
+        } catch (DuplicateObjectException e) {
+            System.out.println("Помилка дублювання: " + e.getMessage());
+            System.out.println("Повернення до головного меню.");
         }
     }
 
@@ -657,9 +667,12 @@ public class Main {
                     d.salary(), d.age(), d.department(), bonus, vacationDays,
                     teamSize, projectName);
             addToCompany(employee, quantity, "Керівника додано до компанії.");
-        } catch (IllegalArgumentException e) {
-            System.out.println("Помилка: " + e.getMessage());
-            System.out.println("Об'єкт не створено.");
+        } catch (InvalidFieldValueException e) {
+            System.out.println("Помилка некоректного значення: " + e.getMessage());
+            System.out.println("Об'єкт не створено. Повернення до головного меню.");
+        } catch (DuplicateObjectException e) {
+            System.out.println("Помилка дублювання: " + e.getMessage());
+            System.out.println("Повернення до головного меню.");
         }
     }
 
@@ -675,9 +688,12 @@ public class Main {
             Employee employee = new Intern(d.firstName(), d.lastName(), d.position(),
                     d.salary(), d.age(), d.department(), university, months, mentor);
             addToCompany(employee, quantity, "Стажиста додано до компанії.");
-        } catch (IllegalArgumentException e) {
-            System.out.println("Помилка: " + e.getMessage());
-            System.out.println("Об'єкт не створено.");
+        } catch (InvalidFieldValueException e) {
+            System.out.println("Помилка некоректного значення: " + e.getMessage());
+            System.out.println("Об'єкт не створено. Повернення до головного меню.");
+        } catch (DuplicateObjectException e) {
+            System.out.println("Помилка дублювання: " + e.getMessage());
+            System.out.println("Повернення до головного меню.");
         }
     }
 
