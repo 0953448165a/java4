@@ -1,14 +1,5 @@
 [
   {
-    "type": "Employee",
-    "firstName": "Іван",
-    "lastName": "Петренко",
-    "position": "Менеджер",
-    "salary": 10000.0,
-    "age": 40,
-    "department": "SALES"
-  },
-  {
     "type": "FullTimeEmployee",
     "firstName": "Ярослав",
     "lastName": "Мудрий",

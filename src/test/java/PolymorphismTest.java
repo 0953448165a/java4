@@ -1,67 +1,58 @@
 import org.junit.jupiter.api.Test;
 
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class PolymorphismTest {
 
     private ArrayList<Employee> createList() {
-        ArrayList<Employee> list = new ArrayList<>();
-        list.add(new Employee("Іван", "Петренко", "Менеджер", 10000, 40, Department.SALES));
-        list.add(new FullTimeEmployee("Ярослав", "Мудрий", "Розробник", 30000, 25, Department.IT, 5000, 24));
-        list.add(new ContractEmployee("Олег", "Бойко", "Тестувальник", 20000, 30, Department.SUPPORT, 6, "TechStaff"));
-        list.add(new Manager("Марія", "Коваль", "Керівник відділу", 40000, 38, Department.IT, 10000, 28, 5, "Alpha"));
-        list.add(new Intern("Андрій", "Шевченко", "Стажист", 12000, 20, Department.IT, "СумДУ", 3, "Ярослав Мудрий"));
-        return list;
+        return new SampleData().employees();
     }
 
     @Test
-    void listShouldHoldObjectsOfAllTypes() {
-        assertEquals(5, createList().size());
+    void baseClassShouldBeAbstractAndImplementComparable() {
+        assertTrue(Modifier.isAbstract(Employee.class.getModifiers()));
+        assertTrue(Comparable.class.isAssignableFrom(Employee.class));
+    }
+
+    @Test
+    void listShouldHoldObjectsOfAllSubtypes() {
+        assertEquals(4, createList().size());
     }
 
     @Test
     void shouldCallOverriddenMethodsThroughBaseReference() {
         ArrayList<Employee> list = createList();
 
-        assertEquals("Працівник", list.get(0).getEmployeeType());
-        assertEquals("Штатний працівник", list.get(1).getEmployeeType());
-        assertEquals("Працівник за контрактом", list.get(2).getEmployeeType());
-        assertEquals("Керівник", list.get(3).getEmployeeType());
-        assertEquals("Стажист", list.get(4).getEmployeeType());
+        assertEquals("Штатний працівник", list.get(0).getEmployeeType());
+        assertEquals("Працівник за контрактом", list.get(1).getEmployeeType());
+        assertEquals("Керівник", list.get(2).getEmployeeType());
+        assertEquals("Стажист", list.get(3).getEmployeeType());
 
-        assertEquals(10000, list.get(0).calculateMonthlyPay());
-        assertEquals(35000, list.get(1).calculateMonthlyPay());
-        assertEquals(20000, list.get(2).calculateMonthlyPay());
-        assertEquals(55000, list.get(3).calculateMonthlyPay());
-        assertEquals(6000, list.get(4).calculateMonthlyPay());
+        assertEquals(35000, list.get(0).calculateMonthlyPay());
+        assertEquals(20000, list.get(1).calculateMonthlyPay());
+        assertEquals(55000, list.get(2).calculateMonthlyPay());
+        assertEquals(6000, list.get(3).calculateMonthlyPay());
     }
 
     @Test
-    void toStringShouldDependOnRealClass() {
+    void shouldSortPolymorphicCollectionUsingComparable() {
         ArrayList<Employee> list = createList();
+        Collections.sort(list);
 
-        assertTrue(list.get(0).toString().startsWith("Employee{"));
-        assertTrue(list.get(1).toString().startsWith("FullTimeEmployee{"));
-        assertTrue(list.get(2).toString().startsWith("ContractEmployee{"));
-        assertTrue(list.get(3).toString().startsWith("Manager{"));
-        assertTrue(list.get(4).toString().startsWith("Intern{"));
-    }
-
-    @Test
-    void shouldCalculateTotalPayOverMixedList() {
-        double total = 0;
-        for (Employee e : createList()) {
-            total += e.calculateMonthlyPay();
-        }
-        assertEquals(126000, total);
+        assertEquals("Бойко", list.get(0).getLastName());
+        assertEquals("Коваль", list.get(1).getLastName());
+        assertEquals("Мудрий", list.get(2).getLastName());
+        assertEquals("Шевченко", list.get(3).getLastName());
     }
 
     @Test
     void employeesOfDifferentClassesShouldNotBeEqual() {
-        Employee base = new Employee("Ярослав", "Мудрий", "Розробник", 30000, 25, Department.IT);
-        Employee derived = new FullTimeEmployee("Ярослав", "Мудрий", "Розробник", 30000, 25, Department.IT, 0, 0);
-        assertNotEquals(base, derived);
+        Employee fullTime = new FullTimeEmployee("Марія", "Коваль", "Керівник відділу", 40000, 38, Department.IT, 10000, 28);
+        Employee manager = new Manager("Марія", "Коваль", "Керівник відділу", 40000, 38, Department.IT, 10000, 28, 5, "Alpha");
+        assertNotEquals(fullTime, manager);
     }
 }

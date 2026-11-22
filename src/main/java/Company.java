@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Objects;
 
 public class Company {
 
@@ -14,6 +16,23 @@ public class Company {
         setFoundedYear(foundedYear);
         this.employees = new ArrayList<Employee>();
         this.quantities = new ArrayList<Integer>();
+    }
+
+    public Company(String name) {
+        this(name, "Суми", 2020);
+    }
+
+    public Company(String name, ArrayList<Employee> employees, ArrayList<Integer> quantities) {
+        this(name);
+        if (employees == null || quantities == null) {
+            throw new IllegalArgumentException("Списки працівників та кількостей не можуть бути null.");
+        }
+        if (employees.size() != quantities.size()) {
+            throw new IllegalArgumentException("Кількість записів працівників і кількостей має збігатися.");
+        }
+        for (int i = 0; i < employees.size(); i++) {
+            addNewEmployee(employees.get(i), quantities.get(i));
+        }
     }
 
     public String getName() {
@@ -33,7 +52,7 @@ public class Company {
 
     public void setCity(String city) {
         if (city == null || city.isBlank()) {
-            throw new IllegalArgumentException("Місто компанії не може бути порожнім.");
+            throw new IllegalArgumentException("Місто не може бути порожнім.");
         }
         this.city = city.trim();
     }
@@ -43,8 +62,8 @@ public class Company {
     }
 
     public void setFoundedYear(int foundedYear) {
-        if (foundedYear < 1800 || foundedYear > 2026) {
-            throw new IllegalArgumentException("Рік заснування компанії має бути від 1800 до 2026.");
+        if (foundedYear < 1800 || foundedYear > 2100) {
+            throw new IllegalArgumentException("Рік заснування має бути в межах від 1800 до 2100.");
         }
         this.foundedYear = foundedYear;
     }
@@ -58,75 +77,106 @@ public class Company {
     }
 
     /**
-     * Додає працівника до колекції компанії.
-     * Якщо такий об'єкт уже існує (перевірка через equals), збільшує його кількість.
+     * Повертає новий список усіх унікальних працівників компанії,
+     * відсортований за природним порядком (Comparable).
      */
-    public void addNewEmployee(Employee emp, int quantity) {
-        if (emp == null) {
+    public ArrayList<Employee> getSortedEmployees() {
+        ArrayList<Employee> sorted = new ArrayList<Employee>(employees);
+        Collections.sort(sorted);
+        return sorted;
+    }
+
+    public int getUniqueEmployeesCount() {
+        return employees.size();
+    }
+
+    public int getTotalHeadcount() {
+        int total = 0;
+        for (int qty : quantities) {
+            total += qty;
+        }
+        return total;
+    }
+
+    public int getTotalEmployeesCount() {
+        return getTotalHeadcount();
+    }
+
+    public boolean isEmpty() {
+        return employees.isEmpty();
+    }
+
+    public int getEmployeeQuantity(Employee employee) {
+        if (employee == null) {
+            return 0;
+        }
+        int index = employees.indexOf(employee);
+        return index >= 0 ? quantities.get(index) : 0;
+    }
+
+    public void addNewEmployee(Employee employee, int quantity) {
+        if (employee == null) {
             throw new IllegalArgumentException("Працівник не може бути null.");
         }
         if (quantity <= 0) {
             throw new IllegalArgumentException("Кількість працівників має бути більшою за 0.");
         }
-
-        for (int i = 0; i < employees.size(); i++) {
-            Employee existing = employees.get(i);
-            if (existing.equals(emp)) {
-                Integer currentQty = quantities.get(i);
-                Integer updatedQty = Integer.valueOf(currentQty.intValue() + quantity);
-                quantities.set(i, updatedQty);
-                return;
-            }
+        int index = employees.indexOf(employee);
+        if (index >= 0) {
+            quantities.set(index, quantities.get(index) + quantity);
+        } else {
+            employees.add(employee);
+            quantities.add(quantity);
         }
-
-        employees.add(emp);
-        quantities.add(Integer.valueOf(quantity));
     }
 
-    /** Повертає кількість для конкретного працівника (або 0, якщо його немає в компанії). */
-    public int getEmployeeQuantity(Employee emp) {
-        if (emp == null) {
-            return 0;
-        }
-        for (int i = 0; i < employees.size(); i++) {
-            if (employees.get(i).equals(emp)) {
-                return quantities.get(i).intValue();
-            }
-        }
-        return 0;
+    public void addEmployee(Employee employee, int quantity) {
+        addNewEmployee(employee, quantity);
     }
 
-    /** Повертає загальну кількість усіх працівників у компанії з урахуванням quantity. */
-    public int getTotalHeadcount() {
-        int total = 0;
-        for (int i = 0; i < quantities.size(); i++) {
-            total += quantities.get(i).intValue();
-        }
-        return total;
+    public void addEmployee(Employee employee) {
+        addNewEmployee(employee, 1);
     }
 
-    /** Повертає сумарні місячні виплати всім працівникам з урахуванням їхньої кількості. */
+    public boolean removeEmployee(Employee employee, int quantity) {
+        if (employee == null) {
+            throw new IllegalArgumentException("Працівник не може бути null.");
+        }
+        if (quantity <= 0) {
+            throw new IllegalArgumentException("Кількість для видалення має бути більшою за 0.");
+        }
+        int index = employees.indexOf(employee);
+        if (index < 0) {
+            return false;
+        }
+        int current = quantities.get(index);
+        if (quantity > current) {
+            throw new IllegalArgumentException("Неможливо видалити більше працівників, ніж є у компанії.");
+        }
+        if (quantity == current) {
+            employees.remove(index);
+            quantities.remove(index);
+        } else {
+            quantities.set(index, current - quantity);
+        }
+        return true;
+    }
+
     public double calculateTotalMonthlyPayroll() {
         double total = 0.0;
         for (int i = 0; i < employees.size(); i++) {
-            Employee emp = employees.get(i);
-            int qty = quantities.get(i).intValue();
-            total += emp.calculateMonthlyPay() * qty;
+            total += employees.get(i).calculateMonthlyPay() * quantities.get(i);
         }
         return total;
     }
 
-    // ===================== Методи пошуку з Практичної №10 =====================
-
-    /** 1. Пошук працівників за прізвищем (без урахування регістру). */
     public ArrayList<Employee> searchByLastName(String query) {
         ArrayList<Employee> found = new ArrayList<Employee>();
         if (query == null || query.isBlank()) {
             return found;
         }
         String needle = query.trim().toLowerCase();
-        for (int i = 0; i < employees.size(); i++) {
-            Employee e = employees.get(i);
+        for (Employee e : employees) {
             if (e.getLastName().toLowerCase().contains(needle)) {
                 found.add(e);
             }
@@ -134,14 +184,12 @@ public class Company {
         return found;
     }
 
-    /** 2. Пошук працівників за відділом. */
     public ArrayList<Employee> searchByDepartment(Department department) {
         ArrayList<Employee> found = new ArrayList<Employee>();
         if (department == null) {
             return found;
         }
-        for (int i = 0; i < employees.size(); i++) {
-            Employee e = employees.get(i);
+        for (Employee e : employees) {
             if (e.getDepartment() == department) {
                 found.add(e);
             }
@@ -149,14 +197,9 @@ public class Company {
         return found;
     }
 
-    /** 3. Пошук працівників за діапазоном зарплати [min; max]. */
     public ArrayList<Employee> searchBySalaryRange(double min, double max) {
         ArrayList<Employee> found = new ArrayList<Employee>();
-        if (min > max) {
-            return found;
-        }
-        for (int i = 0; i < employees.size(); i++) {
-            Employee e = employees.get(i);
+        for (Employee e : employees) {
             if (e.getSalary() >= min && e.getSalary() <= max) {
                 found.add(e);
             }
@@ -164,14 +207,9 @@ public class Company {
         return found;
     }
 
-    /** 4. Пошук працівників за діапазоном віку [min; max]. */
     public ArrayList<Employee> searchByAgeRange(int min, int max) {
         ArrayList<Employee> found = new ArrayList<Employee>();
-        if (min > max) {
-            return found;
-        }
-        for (int i = 0; i < employees.size(); i++) {
-            Employee e = employees.get(i);
+        for (Employee e : employees) {
             if (e.getAge() >= min && e.getAge() <= max) {
                 found.add(e);
             }
@@ -179,14 +217,12 @@ public class Company {
         return found;
     }
 
-    /** 5. Пошук працівників за точною назвою класу. */
     public ArrayList<Employee> searchByType(String typeName) {
         ArrayList<Employee> found = new ArrayList<Employee>();
         if (typeName == null || typeName.isBlank()) {
             return found;
         }
-        for (int i = 0; i < employees.size(); i++) {
-            Employee e = employees.get(i);
+        for (Employee e : employees) {
             if (e.getClass().getSimpleName().equals(typeName)) {
                 found.add(e);
             }
@@ -196,10 +232,25 @@ public class Company {
 
     @Override
     public String toString() {
-        return "Company{name='" + name + '\''
-                + ", city='" + city + '\''
-                + ", foundedYear=" + foundedYear
-                + ", uniquePositions=" + employees.size()
-                + ", totalHeadcount=" + getTotalHeadcount() + '}';
+        return "Company{name='" + name + "', city='" + city + "', foundedYear=" + foundedYear
+                + ", uniquePositions=" + getUniqueEmployeesCount()
+                + ", totalHeadcount=" + getTotalHeadcount() + "}";
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Company company = (Company) o;
+        return foundedYear == company.foundedYear
+                && Objects.equals(name, company.name)
+                && Objects.equals(city, company.city)
+                && Objects.equals(employees, company.employees)
+                && Objects.equals(quantities, company.quantities);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, city, foundedYear, employees, quantities);
     }
 }

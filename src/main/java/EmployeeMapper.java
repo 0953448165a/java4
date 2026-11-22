@@ -39,9 +39,8 @@ public class EmployeeMapper {
     }
 
     /**
-     * Створює об'єкт потрібного класу за полем "type".
-     * @throws IllegalArgumentException якщо поле відсутнє, має неправильний формат
-     *         або значення не пройшло перевірку в конструкторі
+     * Створює об'єкт конкретного підкласу за полем "type".
+     * Базовий клас Employee є абстрактним і не може створюватися напряму.
      */
     public Employee fromFields(Map<String, String> f) {
         String type = text(f, "type");
@@ -52,9 +51,7 @@ public class EmployeeMapper {
         int age = integer(f, "age");
         Department department = department(f, "department");
 
-        if (type.equals("Employee")) {
-            return new Employee(firstName, lastName, position, salary, age, department);
-        } else if (type.equals("FullTimeEmployee")) {
+        if (type.equals("FullTimeEmployee")) {
             return new FullTimeEmployee(firstName, lastName, position, salary, age, department,
                     decimal(f, "bonus"), integer(f, "vacationDays"));
         } else if (type.equals("ContractEmployee")) {
@@ -68,7 +65,7 @@ public class EmployeeMapper {
             return new Intern(firstName, lastName, position, salary, age, department,
                     text(f, "university"), integer(f, "internshipMonths"), text(f, "mentorName"));
         }
-        throw new IllegalArgumentException("невідомий тип об'єкта: " + type);
+        throw new IllegalArgumentException("абстрактний або невідомий тип об'єкта: " + type);
     }
 
     private String text(Map<String, String> f, String key) {

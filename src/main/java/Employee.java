@@ -1,11 +1,8 @@
 import java.util.Objects;
 
-public class Employee {
+public abstract class Employee implements Comparable<Employee> {
 
-    
     public static final int MIN_AGE = 18;
-
-   
     public static final int MAX_AGE = 70;
 
     private String firstName;
@@ -15,7 +12,6 @@ public class Employee {
     private int age;
     private Department department;
 
-    
     public Employee(String firstName, String lastName, String position,
                     double salary, int age, Department department) {
         setFirstName(firstName);
@@ -26,20 +22,6 @@ public class Employee {
         setDepartment(department);
     }
 
-    
-    public Employee(Employee other) {
-        this(requireNotNull(other).firstName, other.lastName, other.position,
-                other.salary, other.age, other.department);
-    }
-
-    
-    private static Employee requireNotNull(Employee other) {
-        if (other == null) {
-            throw new IllegalArgumentException("Працівник для копіювання не може бути null.");
-        }
-        return other;
-    }
-    
     private static String requireNotBlank(String value, String fieldName) {
         if (value == null || value.isBlank()) {
             throw new IllegalArgumentException(fieldName + " не може бути порожнім.");
@@ -47,42 +29,34 @@ public class Employee {
         return value.trim();
     }
 
-    
     public String getFirstName() {
         return firstName;
     }
 
-   
     public void setFirstName(String firstName) {
         this.firstName = requireNotBlank(firstName, "Ім'я");
     }
 
-    
     public String getLastName() {
         return lastName;
     }
 
-    
     public void setLastName(String lastName) {
         this.lastName = requireNotBlank(lastName, "Прізвище");
     }
 
-   
     public String getPosition() {
         return position;
     }
 
-    
     public void setPosition(String position) {
         this.position = requireNotBlank(position, "Посада");
     }
 
-    
     public double getSalary() {
         return salary;
     }
 
-    
     public void setSalary(double salary) {
         if (Double.isNaN(salary) || Double.isInfinite(salary) || salary <= 0) {
             throw new IllegalArgumentException("Зарплата має бути більшою за 0.");
@@ -90,12 +64,10 @@ public class Employee {
         this.salary = salary;
     }
 
-    
     public int getAge() {
         return age;
     }
 
-   
     public void setAge(int age) {
         if (age < MIN_AGE || age > MAX_AGE) {
             throw new IllegalArgumentException(
@@ -104,12 +76,10 @@ public class Employee {
         this.age = age;
     }
 
-    
     public Department getDepartment() {
         return department;
     }
 
-    
     public void setDepartment(Department department) {
         if (department == null) {
             throw new IllegalArgumentException("Відділ не може бути порожнім.");
@@ -117,12 +87,47 @@ public class Employee {
         this.department = department;
     }
 
-    public String getEmployeeType() {
-        return "Працівник";
-    }
+    public abstract String getEmployeeType();
 
     public double calculateMonthlyPay() {
         return salary;
+    }
+
+    /**
+     * Порівнює працівників за ПІБ (спочатку за прізвищем, потім за ім'ям)
+     * з однозначним детермінованим розв'язанням збігів за іншими базовими полями.
+     */
+    @Override
+    public int compareTo(Employee other) {
+        if (other == null) {
+            throw new NullPointerException("Об'єкт Employee для порівняння не може бути null.");
+        }
+
+        int cmp = this.lastName.compareToIgnoreCase(other.lastName);
+        if (cmp != 0) return cmp;
+        cmp = this.lastName.compareTo(other.lastName);
+        if (cmp != 0) return cmp;
+
+        cmp = this.firstName.compareToIgnoreCase(other.firstName);
+        if (cmp != 0) return cmp;
+        cmp = this.firstName.compareTo(other.firstName);
+        if (cmp != 0) return cmp;
+
+        cmp = this.position.compareToIgnoreCase(other.position);
+        if (cmp != 0) return cmp;
+        cmp = this.position.compareTo(other.position);
+        if (cmp != 0) return cmp;
+
+        cmp = Double.compare(this.salary, other.salary);
+        if (cmp != 0) return cmp;
+
+        cmp = Integer.compare(this.age, other.age);
+        if (cmp != 0) return cmp;
+
+        cmp = this.department.compareTo(other.department);
+        if (cmp != 0) return cmp;
+
+        return this.getClass().getSimpleName().compareTo(other.getClass().getSimpleName());
     }
 
     protected String baseFieldsToString() {
