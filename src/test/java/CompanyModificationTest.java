@@ -9,7 +9,7 @@ class CompanyModificationTest {
     @Test
     void shouldUpdateExistingEmployeeAndReturnTrue() {
         Company company = new SampleData().company();
-        Employee existing = company.getEmployees().get(0); // Ярослав Мудрий
+        Employee existing = company.getEmployees().get(0);
         UUID originalUuid = existing.getUuid();
         int originalQty = company.getEmployeeQuantity(existing);
 
@@ -27,16 +27,16 @@ class CompanyModificationTest {
     }
 
     @Test
-    void shouldReturnFalseWhenUpdatingNonExistentOrNullEmployee() {
+    void shouldThrowExceptionsWhenUpdatingNonExistentOrNullEmployee() {
         Company company = new SampleData().company();
         Employee stranger = new Intern("Петро", "Іваненко", "Стажист",
                 10000.0, 21, Department.HR, "СумДУ", 3, "Марія Коваль");
         Employee replacement = new Intern("Петро", "Іваненко", "Молодший спеціаліст",
                 15000.0, 21, Department.HR, "СумДУ", 6, "Марія Коваль");
 
-        assertFalse(company.update(stranger, replacement));
-        assertFalse(company.update(null, replacement));
-        assertThrows(IllegalArgumentException.class, () -> company.update(company.getEmployees().get(0), null));
+        assertThrows(ObjectNotFoundException.class, () -> company.update(stranger, replacement));
+        assertThrows(ObjectNotFoundException.class, () -> company.update(null, replacement));
+        assertThrows(InvalidFieldValueException.class, () -> company.update(company.getEmployees().get(0), null));
     }
 
     @Test
@@ -45,7 +45,7 @@ class CompanyModificationTest {
         int initialUnique = company.getUniqueEmployeesCount();
         int initialHeadcount = company.getTotalHeadcount();
 
-        Employee toDelete = company.getEmployees().get(1); // Олег Бойко (кількість: 1)
+        Employee toDelete = company.getEmployees().get(1);
         boolean result = company.delete(toDelete);
 
         assertTrue(result);
@@ -55,18 +55,18 @@ class CompanyModificationTest {
         assertNull(company.searchByUuid(toDelete.getUuid()));
     }
 
-@Test
-    void shouldReturnFalseWhenDeletingFromEmptyOrMissingObject() {
+    @Test
+    void shouldThrowObjectNotFoundExceptionWhenDeletingFromEmptyOrMissingObject() {
         Company empty = new Company("EmptyCorp");
         Employee sample = new FullTimeEmployee("Ярослав", "Мудрий", "Розробник",
                 30000.0, 25, Department.IT, 5000.0, 24);
 
-        assertFalse(empty.delete(sample));
-        assertFalse(empty.delete(null));
+        assertThrows(ObjectNotFoundException.class, () -> empty.delete(sample));
+        assertThrows(ObjectNotFoundException.class, () -> empty.delete(null));
 
         Company full = new SampleData().company();
         Employee missing = new FullTimeEmployee("Петро", "Іваненко", "Аналітик",
                 28000.0, 29, Department.FINANCE, 4000.0, 24);
-        assertFalse(full.delete(missing));
+        assertThrows(ObjectNotFoundException.class, () -> full.delete(missing));
     }
 }
