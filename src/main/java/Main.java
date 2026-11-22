@@ -1,13 +1,13 @@
 import java.text.Collator;
-import java.util.Locale;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Locale;
 import java.util.Scanner;
 
 public class Main {
 
     private static final String PROGRAM_TITLE =
-            "Практична робота №14: внутрішні класи та інтерфейс Comparator";
+            "Лабораторна робота №15: лямбда-вирази (Lambda expressions)";
     private static final String AUTHOR = "Мудрий Ярослав, група ІН-43-5";
     private static final String DATA_FILE = "input.txt";
 
@@ -39,23 +39,9 @@ public class Main {
                 case 3:
                     printAll();
                     break;
-case 4:
-                    final Collator uaCollator = Collator.getInstance(Locale.forLanguageTag("uk-UA"));
-                    uaCollator.setStrength(Collator.PRIMARY);
-                    Comparator<Employee> byDepartmentAndName = new Comparator<Employee>() {
-                        @Override
-                        public int compare(Employee o1, Employee o2) {
-                            int cmp = uaCollator.compare(
-                                    o1.getDepartment().getTitle(),
-                                    o2.getDepartment().getTitle());
-                            if (cmp != 0) {
-                                return cmp;
-                            }
-                            return o1.compareTo(o2);
-                        }
-                    };
-                    printSortedBy("відділом та ПІБ (за алфавітом)", byDepartmentAndName);
-                    return;
+                case 4:
+                    sortMenu();
+                    break;
                 case 5:
                     STORAGE.saveCompany(company);
                     break;
@@ -94,11 +80,11 @@ case 4:
         System.out.println("0. Зберегти та завершити роботу програми");
     }
 
-    // ===================== Підменю сортування (Comparator) =====================
+    // ===================== Підменю сортування (Lambda expressions) =====================
 
     /**
      * Підменю вибору критерію сортування для пункту №4.
-     * Для кожного критерію використовується анонімний внутрішній клас Comparator<Employee>.
+     * Для кожного критерію використовується лямбда-вираз Comparator<Employee>.
      */
     private static void sortMenu() {
         while (true) {
@@ -114,55 +100,34 @@ case 4:
                 case 0:
                     return;
                 case 1:
-                    Comparator<Employee> bySalaryAsc = new Comparator<Employee>() {
-                        @Override
-                        public int compare(Employee o1, Employee o2) {
-                            int cmp = Double.compare(o1.getSalary(), o2.getSalary());
-                            if (cmp != 0) {
-                                return cmp;
-                            }
-                            return o1.compareTo(o2);
-                        }
+                    Comparator<Employee> bySalaryAsc = (o1, o2) -> {
+                        int cmp = Double.compare(o1.getSalary(), o2.getSalary());
+                        return cmp != 0 ? cmp : o1.compareTo(o2);
                     };
                     printSortedBy("базовою зарплатою (за зростанням)", bySalaryAsc);
                     return;
                 case 2:
-                    Comparator<Employee> byMonthlyPayDesc = new Comparator<Employee>() {
-                        @Override
-                        public int compare(Employee o1, Employee o2) {
-                            int cmp = Double.compare(o2.calculateMonthlyPay(), o1.calculateMonthlyPay());
-                            if (cmp != 0) {
-                                return cmp;
-                            }
-                            return o1.compareTo(o2);
-                        }
+                    Comparator<Employee> byMonthlyPayDesc = (o1, o2) -> {
+                        int cmp = Double.compare(o2.calculateMonthlyPay(), o1.calculateMonthlyPay());
+                        return cmp != 0 ? cmp : o1.compareTo(o2);
                     };
                     printSortedBy("місячною виплатою (за спаданням)", byMonthlyPayDesc);
                     return;
                 case 3:
-                    Comparator<Employee> byAgeAsc = new Comparator<Employee>() {
-                        @Override
-                        public int compare(Employee o1, Employee o2) {
-                            int cmp = Integer.compare(o1.getAge(), o2.getAge());
-                            if (cmp != 0) {
-                                return cmp;
-                            }
-                            return o1.compareTo(o2);
-                        }
+                    Comparator<Employee> byAgeAsc = (o1, o2) -> {
+                        int cmp = Integer.compare(o1.getAge(), o2.getAge());
+                        return cmp != 0 ? cmp : o1.compareTo(o2);
                     };
                     printSortedBy("віком (за зростанням)", byAgeAsc);
                     return;
                 case 4:
-                    Comparator<Employee> byDepartmentAndName = new Comparator<Employee>() {
-                        @Override
-                        public int compare(Employee o1, Employee o2) {
-                            int cmp = o1.getDepartment().getTitle().compareToIgnoreCase(
-                                    o2.getDepartment().getTitle());
-                            if (cmp != 0) {
-                                return cmp;
-                            }
-                            return o1.compareTo(o2);
-                        }
+                    final Collator uaCollator = Collator.getInstance(Locale.forLanguageTag("uk-UA"));
+                    uaCollator.setStrength(Collator.PRIMARY);
+                    Comparator<Employee> byDepartmentAndName = (o1, o2) -> {
+                        int cmp = uaCollator.compare(
+                                o1.getDepartment().getTitle(),
+                                o2.getDepartment().getTitle());
+                        return cmp != 0 ? cmp : o1.compareTo(o2);
                     };
                     printSortedBy("відділом та ПІБ (за алфавітом)", byDepartmentAndName);
                     return;
